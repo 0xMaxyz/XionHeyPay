@@ -9,8 +9,7 @@ import "@burnt-labs/ui/styles.css";
 import type { ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 
 import { seatContractAddress } from "./Const.tsx";
-import "./App.css";
-
+import "./index.css";
 type ExecuteResultOrUndefined = ExecuteResult | undefined;
 
 function App() {
