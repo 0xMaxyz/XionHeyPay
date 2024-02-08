@@ -2,11 +2,9 @@ use crate::error::ContractError;
 use crate::error::ContractError::{InvalidJWTAud, InvalidToken};
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine as _;
-use cosmwasm_std::{Binary, StdError, Timestamp};
 use phf::{phf_map, Map};
 use rsa::traits::SignatureScheme;
 use rsa::{BigUint, Pkcs1v15Sign, RsaPublicKey};
-use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 static AUD_KEY_MAP: Map<&'static str, &'static str> = phf_map! {
@@ -18,11 +16,6 @@ static AUD_KEY_MAP: Map<&'static str, &'static str> = phf_map! {
     "project-test-185e9a9f-8bab-42f2-a924-953a59e8ff94" => "sQKkA829tzjU2VA-INHvdrewkbQzjpsMn0PNM7KJaBODbB4ItZM4x1NVSWBiy2DGHkaDDvADRbbq1BZsC1iXVtIYm0AoD7x4QC1w89kp2_s0wmvUOSPiQZlYrgJqRDXirXJZX3MNku2McXbwdyPajDaR4nBBQOoUOF21CHqLDqBHs2R6tHyL80R_8mgueiqQ-4wg6SSVcB_6ZOh59vRcjKr34upKPWGQzvMGCkeTO9whzbIWbA1j-8ykiS63EhjWBZU_sSolsf1ZGq8peVrADDLhOvHtZxCZLKwB46k2kb8GKAWlO4wRP6BDVjzpnea7BsvZ6JwULKg3HisH9gzaiQ;AQAB",
     "integration-test-project" => "olg7TF3aai-wR4HTDe5oR-WRhEsdW3u-O3IJHl0BiHkmR4MLskHG9HzivWoXsloUBnBMrFNxOH0x5cNMI07oi4PeRbHySiogRW9CXPjJaNlTi-pT_IgKFsyJNXsLyzrnajLkDbQU6pRsHmNeL0hAOUv48rtXv8VVWWN8okJehD2q9N7LHoFAOmIUEPg_VTHTt8K__O-9eMZKN4eMjh_4-sxRX6NXPSPT87XRlrK4GZ4pUdp86K0tOFLhwO4Uj0JkMNfI82eVZ1tAbDlqjd8jFnAb8fWm8wtdaTNbL_AAXmbDhswwJOyrw8fARZIhrXSdKBWa6e4k7sLwTIy-OO8saebnlARsjGst7ZCzmw5KCm2ctEVl3hYhHwyXu_A5rOblMrV3H0G7WqeKMCMVSJ11ssrlsmfVhNIwu1Qlt5GYmPTTJiCgGUGRxZkgDyOyjFNHglYpZamCGyJ9oyofsukEGoqMQ6WzjFi_hjVapzXi7Li-Q0OjEopIUUDDgeUrgjbGY0eiHI6sAz5hoaD0Qjc9e3Hk6-y7VcKCTCAanZOlJV0vJkHB98LBLh9qAoVUei_VaLFe2IcfVlrL_43aXlsHhr_SUQY5pHPlUMbQihE_57dpPRh31qDX_w6ye8dilniP8JmpKM2uIwnJ0x7hfJ45Qa0oLHmrGlzY9wi-RGP0YUk;AQAB",
 };
-
-#[derive(Debug, Serialize, Deserialize)]
-struct TokenPayload {
-    email_address: String,
-}
 
 pub fn verify(
     //current_time: &Timestamp,
@@ -79,11 +72,8 @@ pub fn verify(
 
     // at this point, we have verified that the token is legitimately signed.
     // now we perform logic checks on the body
-    let payload = URL_SAFE_NO_PAD
-        .decode(payload_bytes)
-        .map_err(|_| ContractError::InvalidToken)?;
 
-    extract_email(&payload)
+    extract_email(&payload_bytes)
 }
 
 fn extract_email(payload_bytes: &[u8]) -> Result<String, ContractError> {
@@ -91,8 +81,23 @@ fn extract_email(payload_bytes: &[u8]) -> Result<String, ContractError> {
         .decode(payload_bytes)
         .map_err(|_| ContractError::InvalidToken)?;
 
-    let payload_struct: TokenPayload =
-        serde_json::from_slice(&decoded_payload).map_err(|_| ContractError::InvalidToken)?;
+    let st = String::from_utf8_lossy(&decoded_payload);
 
-    Ok(payload_struct.email_address)
+    let start_index = match st.find("\"email_address\":\"") {
+        Some(index) => index + "\"email_address\":\"".len(),
+        None => {
+            return Err(ContractError::InvalidToken);
+        }
+    };
+
+    let end_index = match st[start_index..].find('"') {
+        Some(index) => index + start_index,
+        None => {
+            return Err(ContractError::InvalidToken);
+        }
+    };
+
+    let email_address = &st[start_index..end_index];
+
+    Ok(email_address.to_owned())
 }

@@ -12,12 +12,6 @@ pub enum ContractError {
     #[error("invalid jwt aud")]
     InvalidJWTAud,
 
-    #[error("signature is invalid. expected: {expected}, received {received}")]
-    InvalidSignatureDetail { expected: String, received: String },
-
-    #[error("invalid time on signature. current: {current} received: {received}")]
-    InvalidTime { current: u64, received: u64 },
-
     #[error("invalid token")]
     InvalidToken,
 }
