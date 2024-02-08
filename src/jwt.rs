@@ -39,6 +39,7 @@ pub fn verify(
     let payload_bytes = components.next().ok_or(InvalidToken)?;
     let digest_bytes = [header_bytes, &[b'.'], payload_bytes].concat();
     let signature_bytes = components.next().ok_or(InvalidToken)?;
+
     let signature = URL_SAFE_NO_PAD
         .decode(signature_bytes)
         .map_err(|_| ContractError::InvalidToken)?;
