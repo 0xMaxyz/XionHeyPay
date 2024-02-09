@@ -1,2 +1,2 @@
 export const seatContractAddress =
-  "xion1z70cvc08qv5764zeg3dykcyymj5z6nu4sqr7x8vl4zjef2gyp69s9mmdka";
+  "xion1rd9a9rdw6gued7hf079a7gngyk0frnlqcc94y8xnhnkydsjzzzvsmxk5fk";
