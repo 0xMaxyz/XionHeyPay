@@ -19,7 +19,7 @@ pub fn instantiate(
     _info: MessageInfo,
     _msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    unimplemented!()
+    Ok(Response::default())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -29,7 +29,9 @@ pub fn execute(
     _info: MessageInfo,
     _msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    unimplemented!()
+    match _msg {
+        ExecuteMsg::Receive(_msg) => execute::execute_receive(_deps, _info, _msg),
+    }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -37,19 +39,42 @@ pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
     unimplemented!()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::jwt::verify;
+mod execute {
+    use cosmwasm_std::{from_json, DepsMut, MessageInfo, Response};
+    use cw20::Cw20ReceiveMsg;
 
-    #[test]
-    fn test_jwt_verification() {
-        let base64_jwt ="eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6ImEyYmQyNTRhMmRlZWEwYmVjYTc2NzQ2MGYxZmYyOGY3In0.eyJhdWQiOlsicHJvamVjdC1saXZlLTdlNGEzMjIxLTc5Y2QtNGYzNC1hYzFkLWZlZGFjNGJkZTEzZSJdLCJleHAiOjE3MDcwNjE1NjMsImh0dHBzOi8vc3R5dGNoLmNvbS9zZXNzaW9uIjp7ImlkIjoic2Vzc2lvbi1saXZlLTVkY2M4M2Q2LTg3NTEtNGQzNC04NzBjLWNmMmY3YzcxYjcyZCIsInN0YXJ0ZWRfYXQiOiIyMDI0LTAyLTA0VDE1OjM3OjQwWiIsImxhc3RfYWNjZXNzZWRfYXQiOiIyMDI0LTAyLTA0VDE1OjQxOjAzWiIsImV4cGlyZXNfYXQiOiIyMDI0LTAyLTA0VDE2OjM3OjQwWiIsImF0dHJpYnV0ZXMiOnsidXNlcl9hZ2VudCI6Ik1vemlsbGEvNS4wIChXaW5kb3dzIE5UIDEwLjA7IFdpbjY0OyB4NjQ7IHJ2OjEyMi4wKSBHZWNrby8yMDEwMDEwMSBGaXJlZm94LzEyMi4wIiwiaXBfYWRkcmVzcyI6IjUwLjcuODUuMjIxIn0sImF1dGhlbnRpY2F0aW9uX2ZhY3RvcnMiOlt7InR5cGUiOiJvdHAiLCJkZWxpdmVyeV9tZXRob2QiOiJlbWFpbCIsImxhc3RfYXV0aGVudGljYXRlZF9hdCI6IjIwMjQtMDItMDRUMTU6Mzc6NDBaIiwiZW1haWxfZmFjdG9yIjp7ImVtYWlsX2lkIjoiZW1haWwtbGl2ZS1iYWViMjk2Yy1kZDdjLTRhZWEtYmJmMy1jNjc0NGVlYjA0NWYiLCJlbWFpbF9hZGRyZXNzIjoiaGFtaWRyYWRwakBnbWFpbC5jb20ifX1dfSwiaWF0IjoxNzA3MDYxMjYzLCJpc3MiOiJzdHl0Y2guY29tL3Byb2plY3QtbGl2ZS03ZTRhMzIyMS03OWNkLTRmMzQtYWMxZC1mZWRhYzRiZGUxM2UiLCJuYmYiOjE3MDcwNjEyNjMsInN1YiI6InVzZXItbGl2ZS1lMjJkZGJmZC1jNjkxLTQ0YjktYjkyZS03MDRiNjRiYmIyZDkifQ.jWgIPQNaG5mwmZWwTRoaHusmj-f89s-9hMAhtHbxU09wUP06zetB2hwg_elJG6NkEwomPax6U_0hYv2tV9tQmg";
-        let aud = "project-test-5ae234a7-6b74-46af-a7b7-969f3df38cc0";
-        let email_in_token = "input email";
+    use crate::{
+        jwt::verify,
+        msg::TokenReceiveMsg,
+        state::{ClaimData, CLAIMS},
+        ContractError,
+    };
 
-        let email_extracted_from_token = verify(base64_jwt.as_bytes(), &aud).unwrap();
+    pub fn execute_receive(
+        _deps: DepsMut,
+        _info: MessageInfo,
+        _wrapper: Cw20ReceiveMsg,
+    ) -> Result<Response, ContractError> {
+        // get the token
+        let token_msg: TokenReceiveMsg = from_json(&_wrapper.msg)?;
+        // verify token and get email
+        let email = verify(&token_msg.token.as_bytes(), &token_msg.audience)?;
+        // create a ClaimData
+        let claim = ClaimData {
+            amount: _wrapper.amount,
+            contract_address: _info.sender,
+            sender_email: email,
+            eoa_address: _deps.api.addr_validate(&_wrapper.sender).unwrap(),
+        };
+        // save the new claim
+        CLAIMS.update(_deps.storage, &token_msg.email, |existing| match existing {
+            Some(mut claims) => {
+                claims.push(claim);
+                Ok::<_, ContractError>(claims)
+            }
+            None => Ok(vec![claim]),
+        })?;
 
-        assert_eq!(email_in_token, email_extracted_from_token);
+        Ok(Response::new())
     }
 }
