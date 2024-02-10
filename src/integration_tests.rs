@@ -2,13 +2,11 @@
 
 use crate::{
     msg::{QueryClaimResponse, QueryMsg, TokenReceiveMsg},
-    unit_tests::{AUDIENCE, EMAIL_2, SESSION_JWT_1},
+    unit_tests::EMAIL_2,
 };
-use cosmwasm_std::{
-    coins, from_binary, from_json, to_json_binary, Addr, Binary, Empty, StdResult, Uint128,
-};
+use cosmwasm_std::{coins, to_json_binary, Addr, Empty, Uint128};
 use cw20::{Cw20Coin, Cw20Contract, Cw20ExecuteMsg};
-use cw20_base::contract;
+
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 
 #[test]
@@ -27,8 +25,8 @@ fn test_receive() {
     // setup sender cw20 account
     let cw20_id = router.store_code(contract_cw20());
     let msg = cw20_base::msg::InstantiateMsg {
-        name: "money".to_owned(),
-        symbol: "MONEY".to_owned(),
+        name: "token".to_owned(),
+        symbol: "TOK".to_owned(),
         decimals: 18,
         initial_balances: vec![Cw20Coin {
             address: owner.to_string(),
@@ -39,7 +37,7 @@ fn test_receive() {
     };
 
     let cw20_addr = router
-        .instantiate_contract(cw20_id, owner.clone(), &msg, &[], "MONEY", None)
+        .instantiate_contract(cw20_id, owner.clone(), &msg, &[], "token", None)
         .unwrap();
 
     // setup haypay
@@ -76,7 +74,7 @@ fn test_receive() {
     };
 
     // send some cw20 tokens to haypay contract
-    let payment_result = router
+    _ = router
         .execute_contract::<Cw20ExecuteMsg>(owner.clone(), cw20_addr.clone(), &send_token_msg, &[])
         .unwrap();
 
@@ -92,8 +90,7 @@ fn test_receive() {
 
     let query_resp: QueryClaimResponse =
         router.wrap().query_wasm_smart(haypay_addr, &_qmsg).unwrap();
-    let claims = &query_resp.total_claims;
-    let ffff = 5;
+    _ = &query_resp.total_claims;
 }
 
 //

@@ -51,7 +51,7 @@ impl ClaimData {
     }
     fn sum_amounts(total_amount: Uint128, new_amount: Uint128) -> Uint128 {
         // Logic to sum Uint128 values, replace with actual implementation
-        total_amount.wrapping_add(new_amount)
+        total_amount.saturating_add(new_amount)
     }
 }
 

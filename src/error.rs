@@ -17,4 +17,7 @@ pub enum ContractError {
 
     #[error("nothing to claim")]
     NotClaimable,
+
+    #[error("arithmatic error happened")]
+    Arithmatic,
 }

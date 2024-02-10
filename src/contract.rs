@@ -1,16 +1,9 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
-// use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-
-/*
-// version info for migration info
-const CONTRACT_NAME: &str = "crates.io:pink-panther";
-const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
-*/
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -43,10 +36,7 @@ pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
 }
 
 mod execute {
-    use cosmwasm_std::{
-        from_json, to_json_binary, Binary, DepsMut, Empty, Env, MessageInfo, Response, Uint128,
-        WasmMsg,
-    };
+    use cosmwasm_std::{from_json, to_json_binary, DepsMut, Env, MessageInfo, Response, WasmMsg};
     use cw20::Cw20ReceiveMsg;
 
     use crate::{
@@ -106,13 +96,8 @@ mod execute {
                                 recipient: _info.sender.to_string(),
                                 amount: tx.total_amount,
                             };
-                            // let rec_msg = Cw20ReceiveMsg {
-                            //     amount: tx.total_amount,
-                            //     sender: _env.contract.address.to_string(),
-                            //     msg: to_json_binary("").unwrap(),
-                            // };
 
-                            let tx_result = WasmMsg::Execute {
+                            _ = WasmMsg::Execute {
                                 contract_addr: tx.token_address.to_string(),
                                 msg: to_json_binary(&tx_msg).unwrap(),
                                 funds: vec![],

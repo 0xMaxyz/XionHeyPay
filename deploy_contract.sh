@@ -19,7 +19,7 @@ if [[ "$OPTIMIZER" == *"status: 0" ]]; then
     echo "----------------------------------------"
 
     echo "3. Instantiating the contract ..."
-    RES=$(xiond tx wasm instantiate $code_id "$INSTANTIATE_MSG" --from $DEPLOYER_ADDRESS --node $RPC --chain-id $CHAIN_ID --label "haypay" --gas auto --gas-adjustment 1.4 --gas-prices $GAS_PRICE --yes --no-admin --output json)
+    RES=$(xiond tx wasm instantiate $CODE_ID "$INSTANTIATE_MSG" --from $DEPLOYER_ADDRESS --node $RPC --chain-id $CHAIN_ID --label "haypay" --gas auto --gas-adjustment 1.4 --gas-prices $GAS_PRICE --yes --no-admin --output json)
     CONTRACT_ADDR=$(echo $res | jq -r '.tx_response.logs[0].events[-1].attributes[0].value')
     INS_TX_HASH=$(echo $res | jq -r '.tx_response.txhash')
 
