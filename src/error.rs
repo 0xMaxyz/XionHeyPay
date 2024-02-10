@@ -14,4 +14,7 @@ pub enum ContractError {
 
     #[error("invalid token")]
     InvalidToken,
+
+    #[error("nothing to claim")]
+    NotClaimable,
 }

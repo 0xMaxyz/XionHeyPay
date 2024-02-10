@@ -1,6 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 // use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -30,22 +30,27 @@ pub fn execute(
     _msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match _msg {
-        ExecuteMsg::Receive(_msg) => execute::execute_receive(_deps, _info, _msg),
+        ExecuteMsg::Receive(msg) => execute::execute_receive(_deps, _info, msg),
+        ExecuteMsg::Claim { msg } => execute::claim(_deps, _info, _env, msg),
     }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
-    unimplemented!()
+    match _msg {
+        QueryMsg::Claims { email } => to_json_binary(&query::query_claims(_deps, _env, email)?),
+    }
 }
 
 mod execute {
-    use cosmwasm_std::{from_json, DepsMut, MessageInfo, Response};
+    use cosmwasm_std::{
+        from_json, to_json_binary, Binary, DepsMut, Empty, Env, MessageInfo, Response, Uint128,
+        WasmMsg,
+    };
     use cw20::Cw20ReceiveMsg;
 
     use crate::{
-        jwt::verify,
-        msg::TokenReceiveMsg,
+        msg::{TokenClaimMsg, TokenReceiveMsg},
         state::{ClaimData, CLAIMS},
         ContractError,
     };
@@ -57,14 +62,12 @@ mod execute {
     ) -> Result<Response, ContractError> {
         // get the token
         let token_msg: TokenReceiveMsg = from_json(&_wrapper.msg)?;
-        // verify token and get email
-        let email = verify(&token_msg.token.as_bytes(), &token_msg.audience)?;
+
         // create a ClaimData
         let claim = ClaimData {
             amount: _wrapper.amount,
-            contract_address: _info.sender,
-            sender_email: email,
-            eoa_address: _deps.api.addr_validate(&_wrapper.sender).unwrap(),
+            token_address: _info.sender,
+            sender_address: _deps.api.addr_validate(&_wrapper.sender).unwrap(),
         };
         // save the new claim
         CLAIMS.update(_deps.storage, &token_msg.email, |existing| match existing {
@@ -75,6 +78,81 @@ mod execute {
             None => Ok(vec![claim]),
         })?;
 
-        Ok(Response::new())
+        Ok(Response::new()
+            .add_attribute("action", "receive tx")
+            .add_attribute("email", token_msg.email))
+    }
+    pub fn claim(
+        _deps: DepsMut,
+        _info: MessageInfo,
+        _env: Env,
+        _msg: TokenClaimMsg,
+    ) -> Result<Response, ContractError> {
+        // verify token and get email
+        match crate::jwt::verify(&_msg.jwt.as_bytes(), &_msg.aud) {
+            Ok(email) => {
+                if CLAIMS.has(_deps.as_ref().storage, &email) {
+                    let txs = ClaimData::prepare_transfer(
+                        CLAIMS.load(_deps.as_ref().storage, &email).unwrap(),
+                    )
+                    .unwrap();
+                    // remove claims for this email
+                    CLAIMS.remove(_deps.storage, &email);
+
+                    // transfer the claims to sender
+                    if !txs.is_empty() {
+                        for tx in &txs {
+                            let tx_msg = cw20::Cw20ExecuteMsg::Transfer {
+                                recipient: _info.sender.to_string(),
+                                amount: tx.total_amount,
+                            };
+                            // let rec_msg = Cw20ReceiveMsg {
+                            //     amount: tx.total_amount,
+                            //     sender: _env.contract.address.to_string(),
+                            //     msg: to_json_binary("").unwrap(),
+                            // };
+
+                            let tx_result = WasmMsg::Execute {
+                                contract_addr: tx.token_address.to_string(),
+                                msg: to_json_binary(&tx_msg).unwrap(),
+                                funds: vec![],
+                            };
+
+                            !todo!()
+                        }
+
+                        let attribs: Vec<(String, String)> = txs
+                            .iter()
+                            .flat_map(|t| t.attributes.iter().cloned())
+                            .collect();
+
+                        Ok(Response::new().add_attributes(attribs))
+                    } else {
+                        return Err(ContractError::NotClaimable);
+                    }
+                } else {
+                    return Err(ContractError::NotClaimable);
+                }
+            }
+            Err(er) => Err(er),
+        }
+    }
+}
+
+mod query {
+    use cosmwasm_std::Uint128;
+
+    use crate::{msg::QueryClaimResponse, state::CLAIMS};
+
+    use super::*;
+    pub fn query_claims(_deps: Deps, _env: Env, email: String) -> StdResult<QueryClaimResponse> {
+        match CLAIMS.may_load(_deps.storage, &email).unwrap() {
+            Some(claims) => Ok(QueryClaimResponse {
+                total_claims: claims.iter().map(|claim| claim.amount).sum(),
+            }),
+            None => Ok(QueryClaimResponse {
+                total_claims: Uint128::zero(),
+            }),
+        }
     }
 }

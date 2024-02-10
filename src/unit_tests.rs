@@ -1,10 +1,16 @@
 #![cfg(test)]
 
-use crate::{contract, jwt::verify, msg::TokenReceiveMsg};
-use cosmwasm_std::{
-    coins, to_binary, to_json_binary, Addr, Empty, Querier, QuerierWrapper, Uint128,
+use crate::{
+    contract::{self, instantiate},
+    jwt::verify,
+    msg::{self, ExecuteMsg, InstantiateMsg, TokenReceiveMsg},
 };
-use cw20::{Cw20Coin, Cw20Contract, Cw20ExecuteMsg, Cw20QueryMsg};
+use cosmwasm_std::{
+    coins,
+    testing::{mock_dependencies, mock_env, mock_info},
+    to_binary, to_json_binary, Addr, Empty, Querier, QuerierWrapper, Response, Uint128,
+};
+use cw20::{Cw20Coin, Cw20Contract, Cw20ExecuteMsg, Cw20QueryMsg, Cw20ReceiveMsg};
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 
 pub const SESSION_JWT_1:&str="eyJhbGciOiJSUzI1NiIsImtpZCI6Imp3ay1saXZlLTVjYjQwZjE4LTdiYjUtNGEwNi04ZjUzLTc4NjdiOGIzNjkzMCIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsicHJvamVjdC1saXZlLTdlNGEzMjIxLTc5Y2QtNGYzNC1hYzFkLWZlZGFjNGJkZTEzZSJdLCJleHAiOjE3MDc0NjY2NzcsImh0dHBzOi8vc3R5dGNoLmNvbS9zZXNzaW9uIjp7ImlkIjoic2Vzc2lvbi1saXZlLWMwMzdkZTU0LTk5NzktNGY3MS04Y2NiLWMxODAwNzE2MzJkZiIsInN0YXJ0ZWRfYXQiOiIyMDI0LTAyLTA5VDA4OjEyOjU3WiIsImxhc3RfYWNjZXNzZWRfYXQiOiIyMDI0LTAyLTA5VDA4OjEyOjU3WiIsImV4cGlyZXNfYXQiOiIyMDI0LTAyLTA5VDA5OjEyOjU3WiIsImF0dHJpYnV0ZXMiOnsidXNlcl9hZ2VudCI6Ik1vemlsbGEvNS4wIChXaW5kb3dzIE5UIDEwLjA7IFdpbjY0OyB4NjQ7IHJ2OjEyMi4wKSBHZWNrby8yMDEwMDEwMSBGaXJlZm94LzEyMi4wIiwiaXBfYWRkcmVzcyI6IjEwNC4yOC4xNTguNDEifSwiYXV0aGVudGljYXRpb25fZmFjdG9ycyI6W3sidHlwZSI6Im90cCIsImRlbGl2ZXJ5X21ldGhvZCI6ImVtYWlsIiwibGFzdF9hdXRoZW50aWNhdGVkX2F0IjoiMjAyNC0wMi0wOVQwODoxMjo1N1oiLCJlbWFpbF9mYWN0b3IiOnsiZW1haWxfaWQiOiJlbWFpbC1saXZlLTQ0YmEwN2FkLTM4OTItNDJiMi05ZTdlLTA0YzZjMmI3MDkxZSIsImVtYWlsX2FkZHJlc3MiOiJtZXdheG9yNjUzQGxheW1yby5jb20ifX1dfSwiaWF0IjoxNzA3NDY2Mzc3LCJpc3MiOiJzdHl0Y2guY29tL3Byb2plY3QtbGl2ZS03ZTRhMzIyMS03OWNkLTRmMzQtYWMxZC1mZWRhYzRiZGUxM2UiLCJuYmYiOjE3MDc0NjYzNzcsInN1YiI6InVzZXItbGl2ZS1kOTNkNDcwNS1jMTBhLTRiMzEtYTgxOS0yOWJjNzY3YWI4NTcifQ.p-BvLuPacxaySZEzOD5m2i0qNkPlmspxV_xFTAJOtpn4hs724SrQuGoZqQZ-AifJ1NS_Q5DLyJxYHyStQrIQIH--_6R0xLRmJw_p_ZFm_nDjDNJ2R_e-ZFAUiNQ1_Ce_FXYQdhQzmrjofxRsY-vd9nGz-zQDwYM29J3yZkr2MDgt7wdu-ytDVg5fy_xbAw8JmYPy2qFhnp5Nj19cPHnSmr6kN7c3vD22vJTEAJgTY7Ru_MA9ScSagTdUKwC1psMTUjkn_uOykYEVWch8rwycIIf1RcNEVSsKGU6X9RvnayV7wVOegh4PiyC0H_M19YriWaSY03KqX0njGMvMvA0fBA";
@@ -20,7 +26,7 @@ fn test_get_email_from_valid_jwt() {
 }
 
 #[test]
-fn test_email_extract_pabics_with_wrong_jwt() {
+fn test_email_extract_with_wrong_jwt() {
     _ = match verify(&SESSION_JWT_1[1..].as_bytes(), &AUDIENCE) {
         Ok(_) => {
             assert!(false)
@@ -32,10 +38,21 @@ fn test_email_extract_pabics_with_wrong_jwt() {
 }
 
 #[test]
-fn test_receive() {
-    // setup owner with founds and App
+fn test_instantiate() {
+    let mut deps = mock_dependencies();
+
+    let instantiate_msg = InstantiateMsg {};
+    let info = mock_info("sender", &[]);
+
+    let result = instantiate(deps.as_mut(), mock_env(), info, instantiate_msg).unwrap();
+
+    assert_eq!(0, result.messages.len());
+}
+
+#[test]
+fn test_execute_receive() {
     let owner = Addr::unchecked("owner");
-    let init_balance = coins(1000, "cw20");
+    let init_balance = coins(1000, "usdc");
 
     let mut router = App::new(|router, _, storage| {
         router
@@ -44,25 +61,6 @@ fn test_receive() {
             .unwrap();
     });
 
-    // setup sender cw20 account
-    let cw20_id = router.store_code(contract_cw20());
-    let msg = cw20_base::msg::InstantiateMsg {
-        name: "money".to_owned(),
-        symbol: "MONEY".to_owned(),
-        decimals: 18,
-        initial_balances: vec![Cw20Coin {
-            address: owner.to_string(),
-            amount: Uint128::new(1000),
-        }],
-        mint: None,
-        marketing: None,
-    };
-
-    let cw20_addr = router
-        .instantiate_contract(cw20_id, owner.clone(), &msg, &[], "MONEY", None)
-        .unwrap();
-
-    // setup haypay
     let haypay_id = router.store_code(haypay_contract());
     let haypay_addr = router
         .instantiate_contract(
@@ -75,33 +73,61 @@ fn test_receive() {
         )
         .unwrap();
 
-    // two different contracts
-    assert_ne!(haypay_addr, cw20_addr);
-
-    // Create ReceiveMsg (for calling Send)
     let token_msg = TokenReceiveMsg {
-        audience: AUDIENCE.to_owned(),
         email: EMAIL_1.to_owned(),
-        token: SESSION_JWT_1.to_owned(),
     };
 
-    // create send token message
-    let send_token_msg = Cw20ExecuteMsg::Send {
-        contract: haypay_addr.to_string(),
-        amount: Uint128::new(1),
+    let receive_mg = Cw20ReceiveMsg {
+        amount: Uint128::new(1000),
+        sender: "sender".to_string(),
         msg: to_json_binary(&token_msg).unwrap(),
     };
 
-    // send some cw20 tokens to haypay contract
-    let payment_result = router
-        .execute_contract(owner.clone(), cw20_addr.clone(), &send_token_msg, &[])
-        .unwrap();
-    let a = 2;
+    let rec_msg = ExecuteMsg::Receive(receive_mg);
+
+    match router.execute_contract(
+        Addr::unchecked("sender contract"),
+        haypay_addr,
+        &rec_msg,
+        &[],
+    ) {
+        Ok(_) => {}
+        Err(_) => {
+            assert!(false)
+        }
+    };
 }
 
-//
+#[test]
+fn test_execute_receive_unit() {
+    let tok_msg = msg::TokenReceiveMsg {
+        email: "test@email.com".to_string(),
+    };
 
-fn haypay_contract() -> Box<dyn Contract<Empty>> {
+    let rec_msg = Cw20ReceiveMsg {
+        amount: Uint128::new(100),
+        sender: "contract0".to_string(),
+        msg: to_json_binary(&tok_msg).unwrap(),
+    };
+
+    let exec_msg = msg::ExecuteMsg::Receive(rec_msg);
+
+    match contract::execute(
+        mock_dependencies().as_mut(),
+        mock_env(),
+        mock_info("sender", &[]),
+        exec_msg,
+    ) {
+        Ok(resp) => {
+            assert!(resp.attributes.len() == 2);
+        }
+        Err(_) => {
+            assert!(false);
+        }
+    };
+}
+
+pub fn haypay_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
         crate::contract::execute,
         crate::contract::instantiate,
@@ -110,7 +136,7 @@ fn haypay_contract() -> Box<dyn Contract<Empty>> {
     Box::new(contract)
 }
 
-fn contract_cw20() -> Box<dyn Contract<Empty>> {
+pub fn contract_cw20() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
         cw20_base::contract::execute,
         cw20_base::contract::instantiate,
