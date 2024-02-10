@@ -2,7 +2,7 @@
 source .env
 instantiate_msg='{}'
 clear
-echo "1. optimized haypay.wasm ..."
+echo "1. optimizing haypay.wasm ..."
 optimizer=$(cargo run-script optimize 2>&1)
 if [[ "$optimizer" == *"status: 0" ]]; then
     echo "haypay.wasm is optimized"
