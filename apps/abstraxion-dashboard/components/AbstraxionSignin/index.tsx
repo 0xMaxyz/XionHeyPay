@@ -52,6 +52,9 @@ export const AbstraxionSignin = () => {
     try {
       setConnectionType("stytch");
       const emailRes = await stytchClient.otps.email.loginOrCreate(email);
+      console.log("hamid", emailRes);
+      localStorage.setItem("hamid", JSON.stringify(emailRes));
+
       setMethodId(emailRes.method_id);
       setIsOnOtpStep(true);
       setTimeLeft(60);
@@ -65,9 +68,10 @@ export const AbstraxionSignin = () => {
     event.preventDefault();
 
     try {
-      await stytchClient.otps.authenticate(otp, methodId, {
+      let authResp = await stytchClient.otps.authenticate(otp, methodId, {
         session_duration_minutes: 60,
       });
+      console.log(authResp);
     } catch (error) {
       setOtpError("Error verifying otp");
     }
