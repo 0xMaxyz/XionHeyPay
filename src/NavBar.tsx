@@ -1,21 +1,17 @@
-import Link from 'next/link'
-import React, { useState } from 'react'
 import {
   Abstraxion,
   useAbstraxionAccount,
-  useAbstraxionSigningClient,
+  useModal
 } from "@burnt-labs/abstraxion";
 import { Button } from "@burnt-labs/ui";
 import "./index.css";
 const NavBar = () => {
   const { data: account } = useAbstraxionAccount();
-  const { client } = useAbstraxionSigningClient();
-  const [loading, setLoading] = useState(false);
+  const [,setShowAbstraxion] = useModal();
 
-  const [isOpen, setIsOpen] = useState(false);
   const links = [
-    {href:"send",label:"Send",img:""},
-    {href:"wallet",label:"Wallet",img:""},
+    {href:"front_test/send",label:"Send",img:""},
+    {href:"front_test/wallet",label:"Wallet",img:""},
   ]
   return (
     <nav className='flex space-x-6 mb-5 px-5 h-14 items-center bg-slate-950' >
@@ -36,9 +32,9 @@ const NavBar = () => {
         <div className=' w-full flex '></div>
         <div className='flex flex-row-reverse p-6'>
           <Button 
-          fullWidth
+          fullWidth className='color-w'
           onClick={() => {
-            setIsOpen(true);
+            setShowAbstraxion(true);
           }}
           structure="base"
           >
@@ -61,9 +57,8 @@ const NavBar = () => {
         </Button>
       ) : null} */}
       <Abstraxion
-        isOpen={isOpen}
-        onClose={() => {
-          setIsOpen(false);
+        onClose={() => { 
+          setShowAbstraxion(false);
         }}
       />
     </nav>

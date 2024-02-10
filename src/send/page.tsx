@@ -1,12 +1,13 @@
 import {
-  Abstraxion,
   useAbstraxionAccount,
   useAbstraxionSigningClient,
 } from "@burnt-labs/abstraxion";
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ExecuteResult} from "@cosmjs/cosmwasm-stargate";
 import {seatContractAddress} from "../Const"
 type ExecuteResultOrUndefined = ExecuteResult | undefined;
+import "@burnt-labs/abstraxion/dist/index.css";
+import "@burnt-labs/ui/dist/index.css";
 
 const Send = () => {
   const { data: account } = useAbstraxionAccount();
@@ -62,6 +63,8 @@ const Send = () => {
       );
       console.log(SendRes)
       setExecuteResult(SendRes);
+      console.log(executeResult);
+      
     } catch (error) {
       // eslint-disable-next-line no-console -- No UI exists yet to display errors
       console.log(error);
