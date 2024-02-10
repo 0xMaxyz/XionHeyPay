@@ -1,9 +1,9 @@
 {
-  "name": "xion-front",
+  "name": "haypayweb",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
-  "homepage": "http://omni001s.github.io/front_test",
+  "homepage": "https://omni001s.github.io/front_test",
   "scripts": {
     "predeploy": "yarn run build",
     "deploy": "gh-pages -d dist",

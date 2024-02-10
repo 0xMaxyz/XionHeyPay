@@ -5,26 +5,31 @@ import {
 } from "@burnt-labs/abstraxion";
 import { Button } from "@burnt-labs/ui";
 import "./index.css";
+import { useNavigate } from "react-router-dom";
 const NavBar = () => {
+  const navigate = useNavigate();
   const { data: account } = useAbstraxionAccount();
   const [,setShowAbstraxion] = useModal();
 
   const links = [
-    {href:"front_test/send",label:"Send",img:""},
-    {href:"front_test/wallet",label:"Wallet",img:""},
+    {href:"/front_test/send",label:"Send",img:""},
+    {href:"/front_test/wallet",label:"Wallet",img:""},
   ]
+  const handleCloseNavMenu = (key: string) => {
+    navigate(key)
+  };
   return (
-    <nav className='flex space-x-6 mb-5 px-5 h-14 items-center bg-slate-950' >
+    <nav className='flex space-x-6 mb-5 px-5 h-14 items-center bg-cyan-700' >
         <div className='flex flex-row items-center space-x-2'>
           <img src={""} className='w-9 h-9'/>
-          <a href={"/"} className="text-white text-lg"> HayPay</a>
+          <a href={"/"} className="text-black text-lg"> HayPay</a>
         </div>
         <ul className='flex space-x-6'>
             {links.map(link=>
             <div className='flex flex-row space-x-1 items-center' key={link.label} >
-              <button >
+              <button onClick={()=>handleCloseNavMenu(link.href)}>
                 <img src={link.img}/>
-                <a href={"/"+link.href}className="text-white text-sm transition-colors" >{link.label}</a>
+                <a className="text-black text-sm transition-colors" >{link.label}</a>
               </button>
             </div> 
             )}
@@ -43,19 +48,6 @@ const NavBar = () => {
             )}
           </Button>
         </div>
-
-      {/* {client ? (
-        <Button
-          disabled={loading}
-          fullWidth
-          onClick={() => {
-            // void claimSeat();
-          }}
-          structure="base"
-        >
-          {loading ? "LOADING..." : "CLAIM SEAT"}
-        </Button>
-      ) : null} */}
       <Abstraxion
         onClose={() => { 
           setShowAbstraxion(false);
