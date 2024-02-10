@@ -18,3 +18,7 @@
 # Misc
 
 /src/bin/local*
+artifacts
+.env
+
+

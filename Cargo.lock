@@ -462,6 +462,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "haypay"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-storage-plus",
+ "cw2",
+ "cw20",
+ "cw20-base",
+ "getrandom",
+ "phf",
+ "rsa",
+ "schemars",
+ "serde",
+ "sha2 0.10.8",
+ "thiserror",
+]
+
+[[package]]
 name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -635,27 +656,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90fcb95eef784c2ac79119d1dd819e162b5da872ce6f3c3abe1e8ca1c082f72b"
 dependencies = [
  "siphasher",
-]
-
-[[package]]
-name = "pink-panther"
-version = "0.1.0"
-dependencies = [
- "base64",
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-multi-test",
- "cw-storage-plus",
- "cw2",
- "cw20",
- "cw20-base",
- "getrandom",
- "phf",
- "rsa",
- "schemars",
- "serde",
- "sha2 0.10.8",
- "thiserror",
 ]
 
 [[package]]

@@ -1,10 +1,8 @@
 [package]
-name = "pink-panther"
+name = "haypay"
 version = "0.1.0"
-authors = ["Saeed <hamidradpj@gmail.com>"]
+authors = ["Saeed <github.com/omni001s>", "Sam <github.com/meisamtaher>"]
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -21,9 +19,7 @@ incremental = false
 overflow-checks = true
 
 [features]
-# for more explicit tests, cargo test --features=backtraces
 backtraces = ["cosmwasm-std/backtraces"]
-# use library feature to disable all instantiate/execute/query exports
 library = []
 
 [package.metadata.scripts]
