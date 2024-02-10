@@ -90,8 +90,9 @@ fn test_receive() {
         email: EMAIL_2.to_owned(),
     };
 
-    let query_resp: Binary = router.wrap().query_wasm_smart(haypay_addr, &_qmsg).unwrap();
-    let qresp: QueryClaimResponse = from_json(query_resp).unwrap();
+    let query_resp: QueryClaimResponse =
+        router.wrap().query_wasm_smart(haypay_addr, &_qmsg).unwrap();
+    let claims = &query_resp.total_claims;
     let ffff = 5;
 }
 

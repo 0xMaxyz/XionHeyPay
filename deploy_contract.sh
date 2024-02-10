@@ -1,33 +1,33 @@
 #!/bin/bash
 source .env
-instantiate_msg='{}'
+INSTANTIATE_MSG='{}'
 clear
 echo "1. optimizing haypay.wasm ..."
-optimizer=$(cargo run-script optimize 2>&1)
-if [[ "$optimizer" == *"status: 0" ]]; then
+OPTIMIZER=$(cargo run-script optimize 2>&1)
+if [[ "$OPTIMIZER" == *"status: 0" ]]; then
     echo "haypay.wasm is optimized"
     echo "----------------------------------------"
     
     echo "2. Saving bytecode ..."
-    res=$(xiond tx wasm store artifacts/haypay.wasm --from $DEPLOYER_ADDRESS --node $RPC --chain-id $CHAIN_ID --gas auto --gas-adjustment 1.4 --gas-prices $GAS_PRICE --output json --yes)
-    code_id=$(echo $res | jq -r '.tx_response.logs[0].events[-1].attributes[1].value')
-    cid_tx_hash=$(echo $res | jq -r '.tx_response.txhash')
+    RES=$(xiond tx wasm store artifacts/haypay.wasm --from $DEPLOYER_ADDRESS --node $RPC --chain-id $CHAIN_ID --gas auto --gas-adjustment 1.4 --gas-prices $GAS_PRICE --output json --yes)
+    CODE_ID=$(echo $RES | jq -r '.tx_response.logs[0].events[-1].attributes[1].value')
+    CODE_ID_TX_HASH=$(echo $RES | jq -r '.tx_response.txhash')
 
-    echo "Code id is: $code_id"
-    echo "Bytecode saving tx hash is: $cid_tx_hash"
+    echo "Code id is: $CODE_ID"
+    echo "Bytecode saving tx hash is: $CODE_ID_TX_HASH"
 
     echo "----------------------------------------"
 
     echo "3. Instantiating the contract ..."
-    res =$(xiond tx wasm instantiate $code_id "$instantiate_msg" --from $DEPLOYER_ADDRESS --node $RPC --chain-id $CHAIN_ID --label "haypay" --gas auto --gas-adjustment 1.4 --gas-prices $GAS_PRICE --yes --no-admin --output json)
-    contract_address =$(echo $res | jq -r '.tx_response.logs[0].events[-1].attributes[0].value')
-    ins_tx_hash =$(echo $res | jq -r '.tx_response.txhash')
+    RES=$(xiond tx wasm instantiate $code_id "$INSTANTIATE_MSG" --from $DEPLOYER_ADDRESS --node $RPC --chain-id $CHAIN_ID --label "haypay" --gas auto --gas-adjustment 1.4 --gas-prices $GAS_PRICE --yes --no-admin --output json)
+    CONTRACT_ADDR=$(echo $res | jq -r '.tx_response.logs[0].events[-1].attributes[0].value')
+    INS_TX_HASH=$(echo $res | jq -r '.tx_response.txhash')
 
     echo "----------------------------------------"
 
-    echo "Contract address is $contract_address"
-    echo "Contract instantiationb tx hash $ins_tx_hash"
+    echo "Contract address is $CONTRACT_ADDR"
+    echo "Contract instantiationb tx hash $INS_TX_HASH"
 else
-    echo "There wa an error optimizing the wasm, run cargo wasm to check for errors"
+    echo "There was an error optimizing the wasm, run cargo wasm to check for errors"
 fi
 

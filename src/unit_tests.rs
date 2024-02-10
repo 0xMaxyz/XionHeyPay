@@ -3,12 +3,12 @@
 use crate::{
     contract::{self, instantiate},
     jwt::verify,
-    msg::{self, ExecuteMsg, InstantiateMsg, TokenReceiveMsg},
+    msg::{self, ExecuteMsg, InstantiateMsg, QueryClaimResponse, QueryMsg, TokenReceiveMsg},
 };
 use cosmwasm_std::{
-    coins,
+    coins, from_json,
     testing::{mock_dependencies, mock_env, mock_info},
-    to_binary, to_json_binary, Addr, Empty, Querier, QuerierWrapper, Response, Uint128,
+    to_binary, to_json_binary, Addr, Deps, Empty, Querier, QuerierWrapper, Response, Uint128,
 };
 use cw20::{Cw20Coin, Cw20Contract, Cw20ExecuteMsg, Cw20QueryMsg, Cw20ReceiveMsg};
 use cw_multi_test::{App, Contract, ContractWrapper, Executor};
@@ -100,26 +100,27 @@ fn test_execute_receive() {
 
 #[test]
 fn test_execute_receive_unit() {
+    let mut dep = mock_dependencies();
+    let info = mock_info("sender", &[]);
+    let amount = Uint128::new(100);
     let tok_msg = msg::TokenReceiveMsg {
-        email: "test@email.com".to_string(),
+        email: EMAIL_1.to_string(),
     };
 
     let rec_msg = Cw20ReceiveMsg {
-        amount: Uint128::new(100),
+        amount: amount,
         sender: "contract0".to_string(),
         msg: to_json_binary(&tok_msg).unwrap(),
     };
 
     let exec_msg = msg::ExecuteMsg::Receive(rec_msg);
 
-    match contract::execute(
-        mock_dependencies().as_mut(),
-        mock_env(),
-        mock_info("sender", &[]),
-        exec_msg,
-    ) {
+    match contract::execute(dep.as_mut(), mock_env(), info, exec_msg) {
         Ok(resp) => {
             assert!(resp.attributes.len() == 2);
+            // query claim
+            let query_resp = query_claim(dep.as_ref(), EMAIL_1.to_string());
+            assert_eq!(query_resp.total_claims, amount);
         }
         Err(_) => {
             assert!(false);
@@ -127,20 +128,72 @@ fn test_execute_receive_unit() {
     };
 }
 
+#[test]
+fn test_query_claims() {
+    let query_resp = query_claim(mock_dependencies().as_ref(), EMAIL_1.to_string());
+    assert!(query_resp.total_claims.is_zero());
+}
+
+#[test]
+fn test_claim_by_email() {
+    let mut dep = mock_dependencies();
+    let info = mock_info("token", &[]);
+    let amount = Uint128::new(100);
+    let tok_msg = msg::TokenReceiveMsg {
+        email: EMAIL_1.to_string(),
+    };
+
+    let rec_msg = Cw20ReceiveMsg {
+        amount: amount,
+        sender: "sender".to_string(),
+        msg: to_json_binary(&tok_msg).unwrap(),
+    };
+
+    let exec_msg = msg::ExecuteMsg::Receive(rec_msg);
+
+    match contract::execute(dep.as_mut(), mock_env(), info.clone(), exec_msg) {
+        Ok(resp) => {
+            assert!(resp.attributes.len() == 2);
+            // query claim
+            let query_resp = query_claim(dep.as_ref(), EMAIL_1.to_string());
+            assert_eq!(query_resp.total_claims, amount);
+        }
+        Err(_) => {
+            assert!(false);
+        }
+    };
+    // claim the tokens by email
+    let token_claim_msg = crate::msg::TokenClaimMsg {
+        aud: AUDIENCE.to_owned(),
+        jwt: SESSION_JWT_1.to_owned(),
+    };
+    let claim_msg = crate::msg::ExecuteMsg::Claim {
+        msg: token_claim_msg,
+    };
+    match crate::contract::execute(dep.as_mut(), mock_env(), info, claim_msg) {
+        Ok(resp) => {
+            assert_eq!(resp.attributes.len(), 1);
+        }
+        Err(_) => {
+            assert!(false)
+        }
+    }
+    // email1 shall have no more claims
+    let query_resp = query_claim(dep.as_ref(), EMAIL_1.to_string());
+    assert_eq!(query_resp.total_claims, Uint128::zero());
+}
+
+fn query_claim(_deps: Deps, email: String) -> QueryClaimResponse {
+    let _qmsg = QueryMsg::Claims { email };
+    let resp = crate::contract::query(_deps, mock_env(), _qmsg).unwrap();
+    from_json::<QueryClaimResponse>(resp).unwrap()
+}
+
 pub fn haypay_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
         crate::contract::execute,
         crate::contract::instantiate,
         crate::contract::query,
-    );
-    Box::new(contract)
-}
-
-pub fn contract_cw20() -> Box<dyn Contract<Empty>> {
-    let contract = ContractWrapper::new(
-        cw20_base::contract::execute,
-        cw20_base::contract::instantiate,
-        cw20_base::contract::query,
     );
     Box::new(contract)
 }

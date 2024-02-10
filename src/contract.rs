@@ -117,8 +117,6 @@ mod execute {
                                 msg: to_json_binary(&tx_msg).unwrap(),
                                 funds: vec![],
                             };
-
-                            !todo!()
                         }
 
                         let attribs: Vec<(String, String)> = txs
