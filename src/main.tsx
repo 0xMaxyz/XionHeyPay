@@ -13,6 +13,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <AbstraxionProvider
       config={{
         contracts: [seatContractAddress],
+        dashboardUrl:"http://localhost:3000/"
       }}
     >
     <BrowserRouter>
