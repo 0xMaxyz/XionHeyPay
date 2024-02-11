@@ -4,7 +4,7 @@ import {
 } from "@burnt-labs/abstraxion";
 import { useEffect, useState } from 'react'
 import type { ExecuteResult} from "@cosmjs/cosmwasm-stargate";
-import {seatContractAddress} from "../Const"
+import {HPCAddress,HaypayAddress} from "../Const"
 type ExecuteResultOrUndefined = ExecuteResult | undefined;
 import "@burnt-labs/abstraxion/dist/index.css";
 import "@burnt-labs/ui/dist/index.css";
@@ -27,7 +27,7 @@ const Send = () => {
     };
     try {
       const SendRes = await client?.queryContractSmart(
-        seatContractAddress,
+        HPCAddress,
         readBalanceMsg,
       );
       console.log(SendRes);
@@ -37,22 +37,22 @@ const Send = () => {
       console.log(error);
     }
   }
-  async function SendToken() {
+  async function Pay() {
     event?.preventDefault();
-    console.log("Send Token:")
-    console.log("address: ", reciever)
+    console.log("email: ", reciever)
     console.log("amount: ", amount);
     setLoading(true);
     const msg = {
-      transfer :{
-        recipient: reciever!,
-        amount: amount.toString() 
+      send :{
+        contract:HaypayAddress,
+        amount: amount.toString(),
+        msg:btoa(`{"email":"${reciever!}"}`)
       }
     };
     try {
       const SendRes = await client?.execute(
         account.bech32Address,
-        seatContractAddress,
+        HPCAddress,
         msg,
         {
           amount: [{ amount: "0", denom: "uxion" }],
@@ -81,15 +81,15 @@ const Send = () => {
         <a>Balance</a>
         <a>{balance}</a>
       </div>
-      <form onSubmit={SendToken} className='inline-flex h-20 w-full pt-3 pb-3'>
+      <form onSubmit={Pay} className='inline-flex h-20 w-full pt-3 pb-3'>
         <input
-          type="string"
+          type="email"
           id='reciever'
           name= 'reciever'
           content={reciever}
           onChange={e=> setReciever(e.target.value)}
           className="w-full p-2  border border-gray-500 rounded  focus:outline-none"
-          placeholder="Reciever Address"
+          placeholder="Reciever Email"
         />
         <input
           type="number"
