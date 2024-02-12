@@ -1,36 +1,30 @@
 {
-  "name": "haypayweb",
+  "name": "@burnt-labs/xion.js",
   "private": true,
-  "version": "0.0.1",
-  "type": "module",
-  "homepage": "https://omni001s.github.io/front_test",
   "scripts": {
-    "predeploy": "yarn run build",
-    "deploy": "gh-pages -d dist",
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "clean": "turbo clean",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "changeset": "changeset",
+    "publish:packages": "changeset publish",
+    "version:packages": "changeset version"
   },
+  "packageManager": "pnpm@8.9.0",
   "dependencies": {
-    "@burnt-labs/abstraxion": "^1.0.0-alpha.24",
-    "@types/react": "^18.2.43",
-    "@types/react-dom": "^18.2.17",
-    "@typescript-eslint/eslint-plugin": "^6.14.0",
-    "@typescript-eslint/parser": "^6.14.0",
-    "@vitejs/plugin-react-swc": "^3.5.0",
-    "autoprefixer": "^10.4.17",
-    "eslint": "^8.55.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.5",
-    "gh-pages": "^6.1.1",
-    "postcss": "^8.4.33",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.22.0",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5.2.2",
-    "vite": "^5.0.8"
+    "@burnt-labs/tsconfig": "0.0.1-alpha.0",
+    "@changesets/changelog-github": "^0.5.0",
+    "@changesets/cli": "^2.27.1",
+    "eslint": "^8.48.0",
+    "prettier": "^3.0.3",
+    "prettier-plugin-tailwindcss": "^0.5.3",
+    "turbo": "latest"
   },
-  "devDependencies": {}
+  "pnpm": {
+    "overrides": {
+      "@types/react": "^18.2.47",
+      "@types/react-dom": "^18.2.18"
+    }
+  }
 }
