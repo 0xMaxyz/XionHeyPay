@@ -15,6 +15,8 @@ const Send = () => {
   const [amount, setAmount] = useState(0);
   const [reciever, setReciever] = useState<string|undefined>();
   const [balance, setBalance] = useState(0);
+  const [contractBalance, setContractBalance] = useState(0);
+  const [transactionMessage, setTransactionMessage] = useState("dinner");
   const [loading, setLoading] = useState(false);
   const [executeResult, setExecuteResult] =
     useState<ExecuteResultOrUndefined>(undefined);
@@ -30,8 +32,13 @@ const Send = () => {
         HPCAddress,
         readBalanceMsg,
       );
+      const SendRes2 = await client?.queryContractSmart(
+        HPCAddress,
+        {balance:{address:HaypayAddress}},
+      );
       console.log(SendRes);
       setBalance(SendRes.balance);
+      setContractBalance(SendRes2.balance);
     } catch (error) {
       // eslint-disable-next-line no-console -- No UI exists yet to display errors
       console.log(error);
@@ -46,7 +53,7 @@ const Send = () => {
       send :{
         contract:HaypayAddress,
         amount: amount.toString(),
-        msg:btoa(`{"email":"${reciever!}"}`)
+        msg:btoa(`{"email":"${reciever!}","memo":"${transactionMessage}"}`)
       }
     };
     try {
@@ -78,8 +85,12 @@ const Send = () => {
   return (
     <div>
       <div className='inline-flex h-20 w-full pt-3 pb-3 '>
-        <a>Balance</a>
+        <a>Balance  </a>
         <a>{balance}</a>
+      </div>
+      <div className='inline-flex h-20 w-full pt-3 pb-3 '>
+        <a>HayPay Contract Balance  </a>
+        <a>{contractBalance}</a>
       </div>
       <form onSubmit={Pay} className='inline-flex h-20 w-full pt-3 pb-3'>
         <input
