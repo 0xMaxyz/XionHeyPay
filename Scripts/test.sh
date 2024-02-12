@@ -20,7 +20,7 @@ query() {
 transfer_token() {
   echo -n "Transfering tokens to test email..."
   local password="$1"
-  TOKEN_MSG=$(echo -e "{ \"email\": \"$TEST_EMAIL\" }" | base64)
+  TOKEN_MSG=$(echo -e "{ \"email\": \"$TEST_EMAIL\",\"memo\": \"test memo for this transaction\" }" | base64 -w 0)
   SEND_MSG="{
   \"send\": {
     \"contract\": \"$HAYPAY_ADDRESS\",
