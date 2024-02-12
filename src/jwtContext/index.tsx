@@ -33,10 +33,14 @@ export function UserContextProvider({
       currentUrl.searchParams.delete("jwt");
       history.pushState({}, "", currentUrl.href);
     }
+    else if(localStorage.getItem("JWT")){
+      setJwt(localStorage.getItem("JWT")!);
+    }
   }, []);
   const setJWTfunc = async(jwt:string)=>{
     const decode = decodeJwt(jwt || "");
     console.log("aud:",decode);
+    localStorage.setItem("JWT",jwt);
     setJwt(jwt);
   }
   
