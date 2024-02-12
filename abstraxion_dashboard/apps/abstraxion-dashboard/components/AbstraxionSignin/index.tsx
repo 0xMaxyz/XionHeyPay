@@ -52,8 +52,6 @@ export const AbstraxionSignin = () => {
     try {
       setConnectionType("stytch");
       const emailRes = await stytchClient.otps.email.loginOrCreate(email);
-      console.log("hamid", emailRes);
-      localStorage.setItem("hamid", JSON.stringify(emailRes));
 
       setMethodId(emailRes.method_id);
       setIsOnOtpStep(true);

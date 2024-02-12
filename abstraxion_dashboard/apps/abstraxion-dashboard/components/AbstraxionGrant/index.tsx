@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import Image from "next/image";
 import { Button, Spinner } from "@burnt-labs/ui";
 import { MsgGrant } from "cosmjs-types/cosmos/authz/v1beta1/tx";
@@ -12,6 +12,8 @@ import burntAvatar from "@/public/burntAvatarCircle.png";
 import { CheckIcon } from "../Icons";
 import { EncodeObject } from "@cosmjs/proto-signing";
 import { redirect, useSearchParams } from "next/navigation";
+import { useStytch } from "@stytch/nextjs";
+import { AbstraxionContext, AbstraxionContextProps } from "../AbstraxionContext";
 
 interface AbstraxionGrantProps {
   contracts: string[];
@@ -24,12 +26,38 @@ export const AbstraxionGrant = ({
 }: AbstraxionGrantProps) => {
   const { client } = useAbstraxionSigningClient();
   const { data: account } = useAbstraxionAccount();
+  const {
+    abstractAccount,
+  } = useContext(AbstraxionContext) as AbstraxionContextProps;
   const searchParams = useSearchParams();
+  const stytchClient = useStytch();
 
   const [inProgress, setInProgress] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-
-  useEffect(function redirectToDapp() {
+  const getJWTEmailClaim= async ()=>{
+    console.log("account", abstractAccount.id);
+    const authResponse = await fetch(
+      "https://aa.xion-testnet-1.burnt.com/api/v1/sessions/authenticate",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          session_token: stytchClient.session.getTokens()?.session_token!,
+          session_duration_minutes: 60 * 24 * 30,
+          session_custom_claims: {
+            address: abstractAccount.id,
+          },
+        }),
+      })
+    if (!authResponse.ok) {
+      throw new Error("Failed to authenticate with stytch");
+    }
+    const authResponseData = await authResponse.json();
+    return authResponseData.data.session_jwt;
+  }
+  const redirect = async()=>{
     if (showSuccess && searchParams.get("redirect_uri")) {
       let redirectUri = new URLSearchParams(window.location.search).get(
         "redirect_uri",
@@ -38,13 +66,17 @@ export const AbstraxionGrant = ({
       if (redirectUri) {
         url = new URL(redirectUri);
         let params = new URLSearchParams(url.search);
-
+        const jwt = await getJWTEmailClaim();
         params.append("granted", "true");
+        params.append("jwt", jwt);
         url.search = params.toString();
         redirectUri = url.toString();
         window.location.href = redirectUri;
       }
     }
+  }
+  useEffect(function redirectToDapp() {
+    redirect()
   });
 
   const generateContractGrant = (granter: string) => {
