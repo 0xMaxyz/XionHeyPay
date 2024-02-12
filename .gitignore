@@ -20,3 +20,4 @@
 /src/bin/local*
 artifacts
 .env
+Scripts/.*.sh

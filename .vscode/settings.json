@@ -6,5 +6,6 @@
     "./Cargo.toml",
     "./Cargo.toml"
   ],
-  "debug.allowBreakpointsEverywhere": true
+  "debug.allowBreakpointsEverywhere": true,
+  "cosmywasmy.chainConfigName": "Juno uni-6"
 }

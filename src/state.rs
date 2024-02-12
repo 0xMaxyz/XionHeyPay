@@ -10,12 +10,14 @@ pub struct ClaimData {
     pub token_address: Addr,
     pub amount: Uint128,
     pub sender_address: Addr,
+    pub memo: String,
 }
 
 pub struct ClaimTransfer {
     pub token_address: Addr,
     pub total_amount: Uint128,
     pub attributes: Vec<(String, String)>,
+    pub memos: Vec<(String, String)>,
 }
 
 impl ClaimData {
@@ -24,27 +26,33 @@ impl ClaimData {
             return Err(ContractError::NotClaimable);
         }
 
-        let mut grouped_claims: HashMap<Addr, (Uint128, Vec<(String, String)>)> = HashMap::new();
+        let mut grouped_claims: HashMap<
+            Addr,
+            (Uint128, Vec<(String, String)>, Vec<(String, String)>),
+        > = HashMap::new();
 
         for claim in claims {
             grouped_claims
                 .entry(claim.token_address.clone())
-                .and_modify(|(total_amount, attributes)| {
+                .and_modify(|(total_amount, attributes, memos)| {
                     *total_amount = Self::sum_amounts(*total_amount, claim.amount);
                     attributes.push((claim.sender_address.to_string(), claim.amount.to_string()));
+                    memos.push((claim.sender_address.to_string(), claim.memo.to_string()))
                 })
                 .or_insert((
                     claim.amount,
                     vec![(claim.sender_address.to_string(), claim.amount.to_string())],
+                    vec![(claim.sender_address.to_string(), claim.memo.to_string())],
                 ));
         }
         let mut result: Vec<ClaimTransfer> = vec![];
 
-        for (c_addr, (amount, attr)) in grouped_claims {
+        for (c_addr, (amount, attr, mem)) in grouped_claims {
             result.push(ClaimTransfer {
                 token_address: c_addr,
                 total_amount: amount,
                 attributes: attr,
+                memos: mem,
             });
         }
         Ok(result)

@@ -20,4 +20,19 @@ pub enum ContractError {
 
     #[error("arithmatic error happened")]
     Arithmatic,
+
+    #[error("couldn't transfer tokens")]
+    Transfer,
+
+    #[error("invalid key")]
+    InvalidKey,
+
+    #[error("memo length is limited to 256 characters")]
+    MemoLength,
+
+    #[error("Invalid instantiate msg")]
+    InvalidMsg,
+
+    #[error("Invalid email")]
+    InvalidEmail,
 }

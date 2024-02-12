@@ -64,6 +64,7 @@ fn test_receive() {
     // Create ReceiveMsg (for calling Send)
     let token_msg = TokenReceiveMsg {
         email: EMAIL_2.to_owned(),
+        memo: "This is a test memo".to_string(),
     };
 
     // create send token message
@@ -90,7 +91,7 @@ fn test_receive() {
 
     let query_resp: QueryClaimResponse =
         router.wrap().query_wasm_smart(haypay_addr, &_qmsg).unwrap();
-    _ = &query_resp.total_claims;
+    _ = &query_resp.claims;
 }
 
 //

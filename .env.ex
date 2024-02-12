@@ -2,3 +2,7 @@ DEPLOYER_ADDRESS=#todo
 RPC=#todo
 CHAIN_ID=#todo
 GAS_PRICE=#todo
+TOKEN_ADDRESS=#todo
+HAYPAY_ADDRESS=#todo
+TEST_EMAIL=#todo
+JWT=#todo
