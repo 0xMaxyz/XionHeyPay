@@ -47,7 +47,7 @@ export const AbstraxionGrant = ({
           session_token: stytchClient.session.getTokens()?.session_token!,
           session_duration_minutes: 60 * 24 * 30,
           session_custom_claims: {
-            address: abstractAccount.id,
+            xion_address: abstractAccount.id,
           },
         }),
       })
