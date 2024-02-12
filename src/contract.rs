@@ -41,6 +41,8 @@ mod execute {
     };
     use cw20::Cw20ReceiveMsg;
 
+    use std::str::FromStr;
+
     use crate::{
         msg::{TokenClaimMsg, TokenReceiveMsg},
         state::{ClaimData, CLAIMS},
@@ -54,6 +56,15 @@ mod execute {
     ) -> Result<Response, ContractError> {
         // get the token
         let token_msg: TokenReceiveMsg = from_json(&_wrapper.msg)?;
+
+        if let Err(_) = email_address::EmailAddress::from_str(&token_msg.email) {
+            return Err(ContractError::InvalidEmail);
+        }
+        if let Some(memo) = &token_msg.memo {
+            if memo.len() > 255 {
+                return Err(ContractError::MemoLength);
+            }
+        }
 
         // create a ClaimData
         let claim = ClaimData {
@@ -75,61 +86,6 @@ mod execute {
             .add_attribute("action", "receive tx")
             .add_attribute("email", token_msg.email))
     }
-
-    // pub fn claim(
-    //     _deps: DepsMut,
-    //     _info: MessageInfo,
-    //     _env: Env,
-    //     _msg: TokenClaimMsg,
-    // ) -> Result<Response, ContractError> {
-    //     // verify token and get email
-    //     match crate::jwt::verify(&_msg.jwt.as_bytes(), &_msg.aud) {
-    //         Ok(email) => {
-    //             if CLAIMS.has(_deps.as_ref().storage, &email) {
-    //                 let txs = ClaimData::prepare_transfer(
-    //                     CLAIMS.load(_deps.as_ref().storage, &email).unwrap(),
-    //                 )
-    //                 .unwrap();
-    //                 // remove claims for this email
-    //                 CLAIMS.remove(_deps.storage, &email);
-
-    //                 // transfer the claims to sender
-    //                 if !txs.is_empty() {
-    //                     let attribs: Vec<(String, String)> = txs
-    //                         .iter()
-    //                         .flat_map(|t| t.attributes.iter().cloned())
-    //                         .collect();
-
-    //                     //let mut resp = Response::new().add_attributes(attribs);
-    //                     let mut cosm_msgs: Vec<CosmosMsg> = vec![];
-    //                     for tx in txs {
-    //                         let ex_msg = cw20::Cw20ExecuteMsg::Transfer {
-    //                             recipient: _info.sender.to_string(),
-    //                             amount: tx.total_amount,
-    //                         };
-
-    //                         let execute = cosmwasm_std::WasmMsg::Execute {
-    //                             contract_addr: tx.token_address.to_string(),
-    //                             msg: to_json_binary(&ex_msg).unwrap(),
-    //                             funds: vec![],
-    //                         };
-
-    //                         cosm_msgs.push(execute.into());
-    //                     }
-
-    //                     Ok(Response::new()
-    //                         .add_attributes(attribs)
-    //                         .add_messages(cosm_msgs))
-    //                 } else {
-    //                     return Err(ContractError::NotClaimable);
-    //                 }
-    //             } else {
-    //                 return Err(ContractError::NotClaimable);
-    //             }
-    //         }
-    //         Err(er) => Err(er),
-    //     }
-    // }
 
     pub fn claim(
         _deps: DepsMut,
@@ -162,6 +118,7 @@ mod execute {
                                 Event::new("memos").add_attributes(
                                     txs.iter()
                                         .flat_map(|t| t.memos.iter().cloned())
+                                        .filter(|(_, memo)| !memo.is_empty())
                                         .collect::<Vec<(String, String)>>(),
                                 ),
                             ) //TODO add memo attribs
@@ -172,6 +129,7 @@ mod execute {
                                         .collect::<Vec<(String, String)>>(),
                                 ),
                             )
+                            .add_attribute("email", &email)
                             .add_messages(
                                 txs.iter()
                                     .map(|tx| {
@@ -215,11 +173,17 @@ mod query {
                 let _claims = claims
                     .iter()
                     .map(
-                        |claim| ClaimResponse {
-                            memo: claim.memo.to_string(),
-                            sender: claim.sender_address.to_string(),
-                            token: claim.token_address.to_string(),
-                            amount: claim.amount,
+                        |claim| {
+                            let memo = match &claim.memo {
+                                Some(m) => m.to_string(),
+                                None => "".to_string(), // or any other default value you prefer
+                            };
+                            ClaimResponse {
+                                memo,
+                                sender: claim.sender_address.to_string(),
+                                token: claim.token_address.to_string(),
+                                amount: claim.amount,
+                            }
                         }, //(claim.token_address.to_string(), claim.amount)
                     )
                     .collect();

@@ -64,7 +64,7 @@ fn test_receive() {
     // Create ReceiveMsg (for calling Send)
     let token_msg = TokenReceiveMsg {
         email: EMAIL_2.to_owned(),
-        memo: "This is a test memo".to_string(),
+        memo: Option::Some("This is a test memo".to_string()),
     };
 
     // create send token message

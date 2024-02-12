@@ -71,6 +71,29 @@ fn test_execute_receive_unit() {
 }
 
 #[test]
+#[should_panic]
+fn test_execute_receive_should_fail_with_wrong_email() {
+    let mut dep = mock_dependencies();
+    let info = mock_info("token", &[]);
+    let amount = Uint128::new(100);
+
+    send_token(
+        dep.as_mut(),
+        info.clone(),
+        amount,
+        "sender".to_string(),
+        "EMAIL_1".to_string(),
+    );
+
+    // query claim
+    let query_resp = query_claim(dep.as_ref(), EMAIL_1.to_string());
+    assert_eq!(
+        query_resp.claims.iter().map(|q| q.amount).sum::<Uint128>(),
+        amount
+    );
+}
+
+#[test]
 fn test_query_claims() {
     let query_resp = query_claim(mock_dependencies().as_ref(), EMAIL_1.to_string());
     assert!(query_resp
@@ -267,6 +290,55 @@ fn test_claim_panicks_with_wrong_sender() {
     );
 }
 
+#[test]
+fn test_empty_memo() {
+    let mut dep = mock_dependencies();
+    let info = mock_info("token", &[]);
+    let amount = Uint128::new(100);
+
+    send_token_custom_memo(
+        dep.as_mut(),
+        info.clone(),
+        amount,
+        "sender".to_string(),
+        EMAIL_1.to_string(),
+        Option::None,
+    );
+
+    claim_by_email(
+        AUDIENCE.to_string(),
+        SESSION_JWT_1.to_string(),
+        dep.as_mut(),
+        mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
+        1,
+    );
+}
+
+#[test]
+#[should_panic]
+fn test_panic_long_memo() {
+    let mut dep = mock_dependencies();
+    let info = mock_info("token", &[]);
+    let amount = Uint128::new(100);
+
+    send_token_custom_memo(
+        dep.as_mut(),
+        info.clone(),
+        amount,
+        "sender".to_string(),
+        EMAIL_1.to_string(),
+        Option::Some(SESSION_JWT_1.to_owned()),
+    );
+
+    claim_by_email(
+        AUDIENCE.to_string(),
+        SESSION_JWT_1.to_string(),
+        dep.as_mut(),
+        mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
+        1,
+    );
+}
+
 fn query_claim(_deps: Deps, email: String) -> QueryClaimResponse {
     let _qmsg = QueryMsg::Claims { email };
     let resp = crate::contract::query(_deps, mock_env(), _qmsg).unwrap();
@@ -303,7 +375,38 @@ fn send_token(
 ) {
     let tok_msg = msg::TokenReceiveMsg {
         email: _email.to_string(),
-        memo: "This is a test memo".to_string(),
+        memo: Option::Some("This is a test memo".to_string()),
+    };
+
+    let rec_msg = Cw20ReceiveMsg {
+        amount: _amount,
+        sender: _sender.to_string(),
+        msg: to_json_binary(&tok_msg).unwrap(),
+    };
+
+    let exec_msg = msg::ExecuteMsg::Receive(rec_msg);
+
+    match contract::execute(_dep, mock_env(), _info.clone(), exec_msg) {
+        Ok(resp) => {
+            assert!(resp.attributes.len() == 2);
+        }
+        Err(_) => {
+            assert!(false);
+        }
+    };
+}
+
+fn send_token_custom_memo(
+    _dep: DepsMut,
+    _info: MessageInfo,
+    _amount: Uint128,
+    _sender: String,
+    _email: String,
+    _memo: Option<String>,
+) {
+    let tok_msg = msg::TokenReceiveMsg {
+        email: _email.to_string(),
+        memo: _memo,
     };
 
     let rec_msg = Cw20ReceiveMsg {

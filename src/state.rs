@@ -10,7 +10,7 @@ pub struct ClaimData {
     pub token_address: Addr,
     pub amount: Uint128,
     pub sender_address: Addr,
-    pub memo: String,
+    pub memo: Option<String>,
 }
 
 pub struct ClaimTransfer {
@@ -37,13 +37,19 @@ impl ClaimData {
                 .and_modify(|(total_amount, attributes, memos)| {
                     *total_amount = Self::sum_amounts(*total_amount, claim.amount);
                     attributes.push((claim.sender_address.to_string(), claim.amount.to_string()));
-                    memos.push((claim.sender_address.to_string(), claim.memo.to_string()))
+                    if let Some(memo) = &claim.memo {
+                        memos.push((claim.sender_address.to_string(), memo.to_string()))
+                    }
                 })
-                .or_insert((
-                    claim.amount,
-                    vec![(claim.sender_address.to_string(), claim.amount.to_string())],
-                    vec![(claim.sender_address.to_string(), claim.memo.to_string())],
-                ));
+                .or_insert_with(|| {
+                    let mut attributes = Vec::new();
+                    attributes.push((claim.sender_address.to_string(), claim.amount.to_string()));
+                    let mut memos = Vec::new();
+                    if let Some(memo) = &claim.memo {
+                        memos.push((claim.sender_address.to_string(), memo.to_string()));
+                    }
+                    (claim.amount, attributes, memos)
+                });
         }
         let mut result: Vec<ClaimTransfer> = vec![];
 
