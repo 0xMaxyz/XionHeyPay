@@ -1,7 +1,16 @@
 import type { ReactNode } from "react";
 import { useEffect, createContext, useState, useContext } from "react";
 import { decodeJwt } from "jose";
+interface JWTObject{
+  "https://stytch.com/session":{
+    authentication_factors:[{
+      email_factor:{
+        email_address:string
+      }
+    }]
+  }
 
+}
 export interface UserContextProps {
   setEmail:React.Dispatch<React.SetStateAction<string>>;
   email:string;
@@ -34,14 +43,24 @@ export function UserContextProvider({
       history.pushState({}, "", currentUrl.href);
     }
     else if(localStorage.getItem("JWT")){
-      setJwt(localStorage.getItem("JWT")!);
+      setJWTfunc(localStorage.getItem("JWT")!);
     }
   }, []);
   const setJWTfunc = async(jwt:string)=>{
-    const decode = decodeJwt(jwt || "");
-    console.log("aud:",decode);
-    localStorage.setItem("JWT",jwt);
-    setJwt(jwt);
+    try {
+      const decode = decodeJwt(jwt || "");
+      console.log("aud:",decode);
+      const decodeObject = decode as unknown as JWTObject;
+      const email = decodeObject["https://stytch.com/session"].authentication_factors[0].email_factor.email_address;
+      localStorage.setItem("JWT",jwt);
+      console.log("Email:",email);
+      console.log("JWT:",jwt);
+      setJwt(jwt);
+      setEmail(email);
+    } catch (error) {
+      console.log("Error Parsing JWT:",error)
+    }
+
   }
   
   return (
