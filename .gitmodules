@@ -2,3 +2,7 @@
 	path = Contract
 	url = https://github.com/omni001s/front_test.git
 	branch = contract
+[submodule "Front"]
+	path = Front
+	url = https://github.com/omni001s/front_test.git
+	branch = front
