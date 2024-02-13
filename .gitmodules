@@ -1,7 +1,3 @@
-[submodule "Front"]
-	path = Front
-	url = https://github.com/omni001s/front_test.git
-	branch = front
 [submodule "Contract"]
 	path = Contract
 	url = https://github.com/omni001s/front_test.git
