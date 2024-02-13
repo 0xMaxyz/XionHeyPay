@@ -1,3 +1,4 @@
+[![Tests](https://github.com/omni001s/front_test/actions/workflows/Basic.yml/badge.svg)](https://github.com/omni001s/front_test/actions/workflows/Basic.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![CosmWasm](https://img.shields.io/badge/CosmWasm-green)
 ![Xion](https://img.shields.io/badge/Xion-black)
