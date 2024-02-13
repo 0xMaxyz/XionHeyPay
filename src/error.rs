@@ -35,4 +35,10 @@ pub enum ContractError {
 
     #[error("Invalid email")]
     InvalidEmail,
+
+    #[error("Cannot migrate from different contract type: {previous_contract}")]
+    CannotMigrate { previous_contract: String },
+
+    #[error("Cannot migrate from unsupported version: {previous_version}")]
+    CannotMigrateVersion { previous_version: String },
 }

@@ -12,6 +12,11 @@ pub enum ExecuteMsg {
 }
 
 #[cw_serde]
+pub struct MigrateMsg {
+    pub default_gas_limit: Option<u64>,
+}
+
+#[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     #[returns(QueryClaimResponse)]

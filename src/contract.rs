@@ -1,9 +1,15 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cw2::{get_contract_version, set_contract_version};
+use semver::Version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+
+// version info for migration
+const CONTRACT_NAME: &str = "haypay";
+const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
@@ -12,7 +18,9 @@ pub fn instantiate(
     _info: MessageInfo,
     _msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    Ok(Response::default())
+    set_contract_version(_deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    Ok(Response::default().add_attribute(CONTRACT_NAME, CONTRACT_VERSION))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -33,6 +41,35 @@ pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
     match _msg {
         QueryMsg::Claims { email } => to_json_binary(&query::query_claims(_deps, _env, email)?),
     }
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(mut deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+    let version: Version = CONTRACT_VERSION.parse().map_err(from_semver)?;
+    let stored = get_contract_version(deps.storage)?;
+    let storage_version: Version = stored.version.parse().map_err(from_semver)?;
+
+    if CONTRACT_NAME != stored.contract {
+        return Err(ContractError::CannotMigrate {
+            previous_contract: stored.contract,
+        });
+    }
+
+    if storage_version > version {
+        return Err(ContractError::CannotMigrateVersion {
+            previous_version: stored.version,
+        });
+    }
+
+    // run the migration ...
+
+    Ok(Response::new())
+}
+
+fn from_semver(err: semver::Error) -> ContractError {
+    ContractError::Std(cosmwasm_std::StdError::generic_err(format!(
+        "Semver: {err}"
+    )))
 }
 
 mod execute {
