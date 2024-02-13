@@ -8,16 +8,24 @@ import {HaypayAddress} from "../Const"
 import "@burnt-labs/abstraxion/dist/index.css";
 import "@burnt-labs/ui/dist/index.css";
 import {useUserContext} from "../jwtContext"
-
+import { ClaimRow } from "../interfaces/types";
+import ClaimCard from "../Components/ClaimCard";
+import CircularProgress from '@mui/material/CircularProgress';
+import Button from "@mui/material/Button";
+interface ClaimResults{
+  token: string,
+  amount: string,
+  sender: string,
+  memo: string
+}
 const Wallet = () => {
   const {email,jwt} = useUserContext();
-  const { data: account } = useAbstraxionAccount();
-  const { client } = useAbstraxionSigningClient();
-  const [jwtToken, setJwtToken] = useState("");
-  const [claimables, setClaimables] = useState(0);
+  const {data: account } = useAbstraxionAccount();
+  const {client } = useAbstraxionSigningClient();
+  const [claimables, setClaimables] = useState<ClaimRow[]|undefined>(undefined);
   const [loading, setLoading] = useState(false);
   async function ReadClaimables() {
-    console.log("Read Claimable")
+    console.log("Read Claimable of Email:", email)
     const claimsMsg = {
       claims: {
         email: email!
@@ -28,8 +36,19 @@ const Wallet = () => {
         HaypayAddress,
         claimsMsg,
       );
-      console.log("All Claimables: ",SendRes);
-      // setClaimable(SendRes.total_claims);
+      const claims = SendRes.claims as unknown as ClaimResults[];
+      setClaimables(claims.map(x=> {
+        return {
+          sender: x.sender,
+          metadata: x.memo,
+          symbol:"USDT",
+          token_address: x.token,
+          amount: Number(x.amount),
+          decimals: 18,
+          logo:"/front_test/USDTlogo.png",
+          price: 1.1
+        } as ClaimRow
+      }))
     } catch (error) {
       // eslint-disable-next-line no-console -- No UI exists yet to display errors
       console.log(error);
@@ -73,16 +92,17 @@ const Wallet = () => {
   }
 
   useEffect(()=>{
-    ReadClaimables();
+    if(email && account!.bech32Address)
+      ReadClaimables();
   },[account,email]);
   return (
   <div>
-    <div className='inline-flex h-20 w-full pt-3 pb-3 '>
+    <div className='flex flex-col w-full pt-3 pb-3 '>
       <a>Claimables</a>
-      <a>{claimables}</a>
+      {claimables?.map((x,index) =>(<ClaimCard key={index} claimObject={x}></ClaimCard>))}
     </div>
     <form onSubmit={ClaimTokens} className='inline-flex h-20 w-full pt-3 pb-3'>
-      <button disabled={loading} className="w-[150px] bg-sky-500 border-r border-t border-b border-gray-500 text-white pr-1  pl-1 rounded-tr-2xl rounded-br-2xl h-full text-xl" >Claim</button>
+      {!loading?<button disabled={loading|| !claimables || claimables.length<1} className="w-[150px] bg-sky-600 hover:bg-sky-500 disabled:bg-gray-500 disabled:text-slate-700  border-gray-500 text-white  rounded h-full text-xl" >Claim</button>:<CircularProgress></CircularProgress>}
     </form>
   </div>
 

@@ -49,12 +49,10 @@ export function UserContextProvider({
   const setJWTfunc = async(jwt:string)=>{
     try {
       const decode = decodeJwt(jwt || "");
-      console.log("aud:",decode);
       const decodeObject = decode as unknown as JWTObject;
       const email = decodeObject["https://stytch.com/session"].authentication_factors[0].email_factor.email_address;
       localStorage.setItem("JWT",jwt);
       console.log("Email:",email);
-      console.log("JWT:",jwt);
       setJwt(jwt);
       setEmail(email);
     } catch (error) {

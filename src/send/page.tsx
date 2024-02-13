@@ -15,7 +15,7 @@ const Send = () => {
   const [amount, setAmount] = useState(0);
   const [reciever, setReciever] = useState<string|undefined>();
   const [balance, setBalance] = useState(0);
-  const [contractBalance, setContractBalance] = useState(0);
+  // const [contractBalance, setContractBalance] = useState(0);
   const [transactionMessage, setTransactionMessage] = useState("dinner");
   const [loading, setLoading] = useState(false);
   const [executeResult, setExecuteResult] =
@@ -32,13 +32,13 @@ const Send = () => {
         HPCAddress,
         readBalanceMsg,
       );
-      const SendRes2 = await client?.queryContractSmart(
-        HPCAddress,
-        {balance:{address:HaypayAddress}},
-      );
+      // const SendRes2 = await client?.queryContractSmart(
+      //   HPCAddress,
+      //   {balance:{address:HaypayAddress}},
+      // );
       console.log(SendRes);
       setBalance(SendRes.balance);
-      setContractBalance(SendRes2.balance);
+      // setContractBalance(SendRes2.balance);
     } catch (error) {
       // eslint-disable-next-line no-console -- No UI exists yet to display errors
       console.log(error);
@@ -88,10 +88,10 @@ const Send = () => {
         <a>Balance  </a>
         <a>{balance}</a>
       </div>
-      <div className='inline-flex h-20 w-full pt-3 pb-3 '>
+      {/* <div className='inline-flex h-20 w-full pt-3 pb-3 '>
         <a>HayPay Contract Balance  </a>
         <a>{contractBalance}</a>
-      </div>
+      </div> */}
       <form onSubmit={Pay} className='inline-flex h-20 w-full pt-3 pb-3'>
         <input
           type="email"
@@ -104,12 +104,21 @@ const Send = () => {
         />
         <input
           type="number"
-          id='amoutn'
+          id='amount'
           name= 'amount'
           content={amount.toString()}
           onChange={e=> setAmount(Number(e.target.value))}
           className="w-full p-2  border-l border-t border-b border-gray-500 rounded-tl-2xl rounded-bl-2xl  focus:outline-none"
           placeholder="amount"
+        />
+        <input
+          type="string"
+          id='details'
+          name= 'details'
+          content={transactionMessage}
+          onChange={e=> setTransactionMessage(" "+e.target.value)}
+          className="w-full p-2  border-l border-t border-b border-gray-500 rounded-tl-2xl rounded-bl-2xl  focus:outline-none"
+          placeholder="Metadat about transaction"
         />
         <button disabled={loading} className="w-[150px] bg-sky-500 border-r border-t border-b border-gray-500 text-white pr-1  pl-1 rounded-tr-2xl rounded-br-2xl h-full text-xl" >Send</button>
       </form>
