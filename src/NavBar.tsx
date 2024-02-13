@@ -6,6 +6,7 @@ import {
 import { Button } from "@burnt-labs/ui";
 import "./index.css";
 import { useNavigate } from "react-router-dom";
+import AddressViewer from "./Components/AddressViewer";
 const NavBar = () => {
   const navigate = useNavigate();
   const { data: account } = useAbstraxionAccount();
@@ -43,7 +44,7 @@ const NavBar = () => {
           }}
           structure="base"
           >
-            {account.bech32Address ? account.bech32Address : (
+            {account.bech32Address ? <AddressViewer address={account.bech32Address}/> : (
               "CONNECT"
             )}
           </Button>
