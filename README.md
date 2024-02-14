@@ -36,7 +36,7 @@ Propelled by Xion's blockchain architecture, HeyPay simplifies cryptocurrency tr
 ## Project Breakdown:
 
 ### HeyPay Contract (Rust, CosmWasm, Xion-tailored):
-XXXX
+The contract is written in rust (cosmwasm) and it manages the token transfer and token claim.
 ### Account Dashboard (Next.js, Xion Account Abstraction):
 XXXX
 ### HeyPay Web App (Vite React):
@@ -81,7 +81,7 @@ The HeyPay contract, does all the token transferring and token claiming, in this
 ***
 ## Deployed Contract
 
-The contract is deployed to Xion Testnet at `xionXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`.
+The contract is deployed to Xion Testnet at `xion1zt64jdruawm4dl0svxe973gkd4kgvllwzgw6wexlgkpjmcssu4gqnqwdyp`.
 
 **Contract Documentation**: Delve deeper into the contract's intricacies and local testing procedures [here](https://github.com/omni001s/HeyPay/tree/contract)
 
