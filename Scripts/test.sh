@@ -79,7 +79,6 @@ wait() {
 }
 
 read -s -p "Enter keyring passphrase (if any): " password
-#echo "$password" >.t
 echo -en "033[1A\033[2K\r"
 
 query "$DEPLOYER_ADDRESS" "Deployer" "$TOKEN_ADDRESS"

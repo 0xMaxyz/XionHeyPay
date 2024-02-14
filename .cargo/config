@@ -1,5 +1,6 @@
 [alias]
 wasm = "build --release --lib --target wasm32-unknown-unknown"
-t = "test --lib"
+test = "test --lib"
 schema = "run --bin schema"
 optimize = "run-script optimize"
+deploy = "run-script deploy"

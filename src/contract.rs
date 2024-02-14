@@ -8,7 +8,7 @@ use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 
 // version info for migration
-const CONTRACT_NAME: &str = "haypay";
+const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -44,9 +44,9 @@ pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(mut deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
+pub fn migrate(mut _deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
     let version: Version = CONTRACT_VERSION.parse().map_err(from_semver)?;
-    let stored = get_contract_version(deps.storage)?;
+    let stored = get_contract_version(_deps.storage)?;
     let storage_version: Version = stored.version.parse().map_err(from_semver)?;
 
     if CONTRACT_NAME != stored.contract {
@@ -63,6 +63,7 @@ pub fn migrate(mut deps: DepsMut, env: Env, msg: MigrateMsg) -> Result<Response,
 
     // run the migration ...
 
+    set_contract_version(_deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     Ok(Response::new())
 }
 

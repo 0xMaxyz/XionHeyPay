@@ -28,6 +28,7 @@ optimize = """docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
   cosmwasm/optimizer:0.15.0
 """
+deploy = """./Scripts/deploy.sh"""
 
 [dependencies]
 base64 = "0.21.7"
