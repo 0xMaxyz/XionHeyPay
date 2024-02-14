@@ -5,25 +5,24 @@ import {
 } from "@burnt-labs/abstraxion";
 import { Button } from "@burnt-labs/ui";
 import "./index.css";
-import { useNavigate } from "react-router-dom";
-import AddressViewer from "./Components/AddressViewer";
+// import { useNavigate } from "react-router-dom";
 const NavBar = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const { data: account } = useAbstraxionAccount();
   const [,setShowAbstraxion] = useModal();
 
-  const links = [
-    // {href:"/HeyPay/send",label:"Send",img:""},
-    // {href:"/HeyPay/wallet",label:"Wallet",img:""},
-  ]
-  const handleCloseNavMenu = (key: string) => {
-    navigate(key)
-  };
+  // const links = [
+  //   // {href:"/HeyPay/send",label:"Send",img:""},
+  //   // {href:"/HeyPay/wallet",label:"Wallet",img:""},
+  // ]
+  // const handleCloseNavMenu = (key: string) => {
+  //   navigate(key)
+  // };
   return (
-    <nav className='flex space-x-6 px-5 h-14 items-center bg-cyan-700' >
+    <nav className='flex space-x-6 px-8 h-16 items-center bg-gradient-to-l from-[#65CADA] to-[#97DFEB]/60 shadow backdrop-blur-sm' >
         <div className='flex flex-row items-center space-x-2'>
-          <img src={""} className='w-9 h-9'/>
-          <a href={"/"} className="text-black text-lg"> HayPay</a>
+          <img src={"/HeyPay/logo.svg"} className='w-9 h-9'/>
+          <a href={"/"} className="text-black text-2xl font-bold"> HeyPay</a>
         </div>
         <ul className='flex space-x-6'>
             {/* {links.map(link=>

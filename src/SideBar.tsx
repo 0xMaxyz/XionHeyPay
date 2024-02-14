@@ -13,6 +13,8 @@ import {
 import ClaimMessage from "./Components/ClaimMessage";
 import NothingMessage from "./Components/NothingMessage";
 import AddressViewer from "./Components/AddressViewer";
+import { TokenMaps } from "./Const";
+import useNotification from "./Components/SnackBar";
   interface ClaimResults{
     token: string,
     amount: string,
@@ -21,6 +23,7 @@ import AddressViewer from "./Components/AddressViewer";
   }
 
 const SideBar = () => {
+    const sendNotification = useNotification();
     const {email,jwt} = useUserContext();
     const {data: account } = useAbstraxionAccount();
     const {client } = useAbstraxionSigningClient();
@@ -43,12 +46,12 @@ const SideBar = () => {
           return {
             sender: x.sender,
             metadata: x.memo,
-            symbol:"USDT",
+            symbol:TokenMaps.get(x.token)?.symbol,
             token_address: x.token,
             amount: Number(x.amount),
             decimals: 18,
-            logo:"/HeyPay/USDTlogo.png",
-            price: 1.1
+            logo:TokenMaps.get(x.token)?.logo,
+            price:TokenMaps.get(x.token)?.price
           } as ClaimRow
         }))
       } catch (error) {
@@ -84,10 +87,14 @@ const SideBar = () => {
         console.log(SendRes)
         // setExecuteResult(SendRes);
         console.log(SendRes);
-        
+        if(SendRes?.transactionHash){
+          sendNotification({msg:"Hey!!! Successfully Claimed all the tokens",variant:"success"});
+        }
       } catch (error) {
         // eslint-disable-next-line no-console -- No UI exists yet to display errors
         console.log(error);
+        sendNotification({msg:`Error Claiming token: ${error}`,variant:"error"});
+
       } finally {
         setLoading(false);
         ReadClaimables();
@@ -110,23 +117,23 @@ const SideBar = () => {
         </div>
         <div className="bg-slate-600 h-0.5  m-5"></div>
         
-        <div className="p-5 w-full justify-center items-center">
+        <div className="pl-5 pr-5 w-full justify-center items-center">
             {(claimables==undefined)&& <CircularProgress></CircularProgress>}
             {(claimables && claimables.length==0)&&<NothingMessage></NothingMessage>}
             {(claimables && claimables.length>0)&&<div>
             <ClaimMessage></ClaimMessage>
-            <div className='flex flex-col w-full pt-3 pb-3 gap-2 '>
+            <div className='flex flex-col w-full pt-3  gap-2 '>
                 {claimables?.map((x,index) =>(<ClaimCard key={index} claimObject={x}></ClaimCard>))}
                 <div className="bg-slate-600 h-0.5  m-2"></div>
-                <div className="flex flex-row p-4">     
+                <div className="flex flex-row pl-4 pr-4">     
                     <a className="flex flex-row w-40">Total Value: </a>
                     <div className="flex flex-row-reverse w-full ">
-                        <a className="font-bold "> {claimables?.reduce((accumulator, x)=>{return accumulator+(x.amount*x.price)},0)}</a>
+                        <a className="font-bold "> {claimables?.reduce((accumulator, x)=>{return accumulator+(x.amount*x.price)},0)}$</a>
                     </div>
                 </div>
             </div>
             <form onSubmit={ClaimTokens} className='flex flex-row-reverse h-20 w-full pt-3 pb-3'>
-                {!loading?<button disabled={loading|| !claimables || claimables.length<1} className="w-[150px] bg-sky-600 hover:bg-sky-500 disabled:bg-gray-500 disabled:text-slate-700  border-gray-500 text-white  rounded h-full text-xl" >Claim</button>:<CircularProgress></CircularProgress>}
+                {!loading?<button disabled={loading|| !claimables || claimables.length<1} className="w-[150px] bg-sky-600 hover:bg-sky-500 disabled:bg-gray-500 disabled:text-slate-700  border-gray-500 text-white  rounded h-full text-xl font-bold" >Claim</button>:<CircularProgress></CircularProgress>}
             </form></div>}
         </div>
     </div>
