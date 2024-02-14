@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::error::ContractError;
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Uint128};
-use cw_storage_plus::Map;
+use cw_storage_plus::{Item, Map};
 
 #[cw_serde]
 pub struct ClaimData {
@@ -70,3 +70,4 @@ impl ClaimData {
 }
 
 pub const CLAIMS: Map<&str, Vec<ClaimData>> = Map::new("haypay");
+pub const ADMIN: Item<String> = Item::new("Admin");

@@ -6,6 +6,7 @@ use semver::Version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use crate::state::ADMIN;
 
 // version info for migration
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
@@ -19,8 +20,11 @@ pub fn instantiate(
     _msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(_deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+    ADMIN.save(_deps.storage, &_info.sender.to_string())?;
 
-    Ok(Response::default().add_attribute(CONTRACT_NAME, CONTRACT_VERSION))
+    Ok(Response::default()
+        .add_attribute(CONTRACT_NAME, CONTRACT_VERSION)
+        .add_attribute("action", "instantiate"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -61,10 +65,10 @@ pub fn migrate(mut _deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Respon
         });
     }
 
-    // run the migration ...
+    // Migrate the state
 
     set_contract_version(_deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-    Ok(Response::new())
+    Ok(Response::new().add_attribute("action", "migrate"))
 }
 
 fn from_semver(err: semver::Error) -> ContractError {
@@ -152,6 +156,7 @@ mod execute {
                     // transfer the claims to sender and add atributes
                     if !txs.is_empty() {
                         Ok(Response::new()
+                            .add_attribute("action", "claim")
                             .add_event(
                                 Event::new("memos").add_attributes(
                                     txs.iter()
@@ -159,7 +164,7 @@ mod execute {
                                         .filter(|(_, memo)| !memo.is_empty())
                                         .collect::<Vec<(String, String)>>(),
                                 ),
-                            ) //TODO add memo attribs
+                            )
                             .add_event(
                                 Event::new("claims").add_attributes(
                                     txs.iter()

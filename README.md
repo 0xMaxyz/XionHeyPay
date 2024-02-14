@@ -42,7 +42,7 @@ The required environment variables for deploy script are
 $DEPLOYER_ADDRESS, $RPC, $CHAIN_ID, $GAS_PRICE
 # GAS_PRICE could be set to 0uxion for xion testnet
 ```
-### (Optional) Install the `cargo-run-script`
+### (Optional) Install the [cargo-run-script](#requirements)
 ### Deploy the contract
 you could invoke the deploy scripts directly or using cargo
 - Directly run the script
@@ -57,4 +57,4 @@ After deploying the contract, the script gives you the `code_id`, `contract_addr
 ## Testing
 You could use the [test](./Scripts/test.sh) script in scripts folder to test the contract on testnet, but it requires jwt and email address, the email address and your `xion_address` shall be in jwt, preparing this jwt is kindof difficult but you could check it out in our demo [video](https://youtu.be/xxxxxxxxxxx)
 ## Deployed contract in Xion Testnet
-The contract is deployed to Xion testnet at `xionxxxx` with code_id of `1xx`.
+The contract is deployed to Xion testnet at `xion1zt64jdruawm4dl0svxe973gkd4kgvllwzgw6wexlgkpjmcssu4gqnqwdyp`.
