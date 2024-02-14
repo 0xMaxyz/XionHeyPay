@@ -4,7 +4,7 @@ import {
 } from "@burnt-labs/abstraxion";
 import { useEffect, useState } from 'react'
 import type { ExecuteResult} from "@cosmjs/cosmwasm-stargate";
-import {HPCAddress,HaypayAddress} from "../Const"
+import {HaypayAddress} from "../Const"
 type ExecuteResultOrUndefined = ExecuteResult | undefined;
 import "@burnt-labs/abstraxion/dist/index.css";
 import "@burnt-labs/ui/dist/index.css";
@@ -38,15 +38,9 @@ const Send = () => {
         selectedtoken,
         readBalanceMsg,
       );
-      // const SendRes2 = await client?.queryContractSmart(
-      //   HPCAddress,
-      //   {balance:{address:HaypayAddress}},
-      // );
       console.log(SendRes);
       setBalance(SendRes!.balance);
-      // setContractBalance(SendRes2.balance);
     } catch (error) {
-      // eslint-disable-next-line no-console -- No UI exists yet to display errors
       console.log(error);
     }finally{
       setBalanceLoading(false);
@@ -66,7 +60,7 @@ const Send = () => {
     try {
       const SendRes = await client?.execute(
         account.bech32Address,
-        HPCAddress,
+        selectedtoken,
         msg,
         {
           amount: [{ amount: "0", denom: "uxion" }],
