@@ -45,7 +45,7 @@ const Wallet = () => {
           token_address: x.token,
           amount: Number(x.amount),
           decimals: 18,
-          logo:"/front_test/USDTlogo.png",
+          logo:"/HeyPay/USDTlogo.png",
           price: 1.1
         } as ClaimRow
       }))

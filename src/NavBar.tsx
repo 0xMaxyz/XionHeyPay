@@ -13,8 +13,8 @@ const NavBar = () => {
   const [,setShowAbstraxion] = useModal();
 
   const links = [
-    {href:"/front_test/send",label:"Send",img:""},
-    {href:"/front_test/wallet",label:"Wallet",img:""},
+    {href:"/HeyPay/send",label:"Send",img:""},
+    {href:"/HeyPay/wallet",label:"Wallet",img:""},
   ]
   const handleCloseNavMenu = (key: string) => {
     navigate(key)

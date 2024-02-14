@@ -6,6 +6,8 @@ import "./index.css";
 import { AbstraxionProvider } from "@burnt-labs/abstraxion";
 import { HPCAddress,HaypayAddress } from "./Const.tsx";
 import { UserContextProvider } from "./jwtContext/index.tsx";
+import CssBaseline from '@mui/material/CssBaseline';
+
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
@@ -17,6 +19,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         >
             <UserContextProvider>
                 <SnackbarProvider>
+                    <CssBaseline />
                     <Main />
                 </SnackbarProvider>
             </UserContextProvider>

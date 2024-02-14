@@ -9,9 +9,9 @@ function Main() {
     <BrowserRouter>
       <NavBar/>
       <Routes >
-          <Route path = "/front_test" element={<MainPage/>}/>
-          <Route path = "/front_test/send" element={<Send />} />
-          <Route path = "/front_test/wallet" element={<Wallet />} />
+          <Route path = "/HeyPay" element={<MainPage/>}/>
+          <Route path = "/HeyPay/send" element={<Send />} />
+          <Route path = "/HeyPay/wallet" element={<Wallet />} />
       </Routes>
     </BrowserRouter>
   );
