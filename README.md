@@ -32,15 +32,15 @@ Propelled by Xion's blockchain architecture, HeyPay simplifies cryptocurrency tr
 ***
 ## Architecture Diagram
 
-<!-- ![image](https://github.com/XXXXX) -->
+<!-- ![Diagram](https://raw.githubusercontent.com/omni001s/HeyPay/master/msg6376040916-569563.jpg)) -->
 ## Project Breakdown:
 
 ### HeyPay Contract (Rust, CosmWasm, Xion-tailored):
 The contract is written in rust (cosmwasm) and it manages the token transfer and token claim.
 ### Account Dashboard (Next.js, Xion Account Abstraction):
-XXXX
+A customized verion of Abstraxion dashboard that can create Email JWT alongside wallet connection
 ### HeyPay Web App (Vite React):
-XXXX
+The Front end of our dapp that let users to send and claim token with interacting with Abstraxion dashboard and SmartContract
 ***
 ## Project Flow
 
