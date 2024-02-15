@@ -31,7 +31,7 @@
 Propelled by Xion's blockchain architecture, HeyPay simplifies cryptocurrency transfers, offering a seamless user experience that eliminates the complexities of conventional crypto transactions. Users leverage familiar authentication methods for secure token transfers, enabling a frictionless web2 experience within the web3 domain.
 ***
 ## Architecture Diagram
-![Image](https://github.com/omni001s/HeyPay/msg6376040916-569563.jpg)
+![msg6376040916-569563](https://github.com/omni001s/HeyPay/assets/20505521/a3e952b0-b89a-4b2a-8d14-ff14d6951505)
 ## Project Breakdown:
 
 ### HeyPay Contract (Rust, CosmWasm, Xion-tailored):
