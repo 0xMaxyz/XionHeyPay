@@ -14,47 +14,50 @@ If you want to use scripts and run them like `yarn script`, you could install th
 $ cargo install cargo-run-script
 ```
 ### Test locally
-You could run the tests for this contract by runing the following command:
+Run the following command to execute the contract's tests:
 ```sh
 $ cargo test
 ```
-The wasm binaries could be build by invoking
+Build the Wasm binaries using
 ```sh
 $ cargo wasm
 ```
-If you want to generate the opotimized binaries, you could use the following command, you need to have docker beforehand.
+To generate optimized binaries (requires Docker):
 ```sh
 $ cargo optimize
 ```
-This generates the optimized wasm binary which could be deployed to local testnet or Xion testnet, the binary could be found in `artifacts` folder.
+This creates optimized Wasm binaries suitable for deployment to local or Xion testnets. You can find them in the `artifacts` folder.
 # Deploying to Xion testnet and testing the contract
-## Deploy
-These is a [Deploy](./Scripts/deploy.sh) script which could be used to deploy the contract on Xion Testnet, you need some requirements to run this script.
+## Deployment Steps
+The [Deploy](./Scripts/deploy.sh) script helps deploy the contract on the Xion Testnet. Make sure you meet the following requirements before running it:
 ### Set environment variables
-The requirement variables required for `deploy` and `test` script could be found in [sample environment variables](./.env.ex) file, you could set your variables there and then apply it. It is advised that you make a .env file from this file and then set your environment variables there, since .env is added to `.gitignore` file and and it is not manage by git.
+The required environment variables for the `deploy` and `test` scripts are listed in the [sample environment variables](./.env.ex) file. Copy it to `.env` and set your specific values. (`.env` is excluded from version control).
 ```sh
 $ cp .env.ex .env
-# make your changes in the .env file and then use the following command
+# Edit your values in .env and then apply them:
 $ source .env
 ```
-The required environment variables for deploy script are
+The required variables for deployment are:
 ```sh
-$DEPLOYER_ADDRESS, $RPC, $CHAIN_ID, $GAS_PRICE
-# GAS_PRICE could be set to 0uxion for xion testnet
+$DEPLOYER_ADDRESS
+$RPC
+$CHAIN_ID
+$GAS_PRICE # set to 0uxion for Xion testnet
 ```
-### (Optional) Install the [cargo-run-script](#requirements)
+### (Optional) Install [cargo-run-script](#requirements)
 ### Deploy the contract
-you could invoke the deploy scripts directly or using cargo
-- Directly run the script
+Run the deploy script directly or using Cargo:
+- **Directly:**
   ```sh
   $ ./Scripts/deploy.sh
   ```
-- Use Cargo (`cargo-run-script` is required)
+- **Using Cargo Cargo** (requires `cargo-run-script`)
   ```sh
   $ cargo deploy
   ```
-After deploying the contract, the script gives you the `code_id`, `contract_address` and `tx_hash` for both binary saving and contract instantiating. You could set the received `contract_address` in `.env` file to be able to run `test` script.
+Upon successful deployment, the script provides the `code_id`, `contract_address`, and `tx_hash` for both binary saving and contract instantiation. Set the `HEYPAY_ADDRESS` in your `.env` file before executing the `test` script.
 ## Testing
-You could use the [test](./Scripts/test.sh) script in scripts folder to test the contract on testnet, but it requires jwt and email address, the email address and your `xion_address` shall be in jwt, preparing this jwt is kindof difficult but you could check it out in our demo [video](https://youtu.be/xxxxxxxxxxx)
+The `./Scripts/test.sh` script helps test the contract on the testnet, but it requires a JWT containing your email address and Xion address. Manual setup of this custom JWT can be complex, you have to inject email address and xion address in your request to receive a valid JWT with custom claims.
+A video of our demo using our front app is [here](https://youtu.be/NIFiNzDLiOY).
 ## Deployed contract in Xion Testnet
 The contract is deployed to Xion testnet at `xion1zt64jdruawm4dl0svxe973gkd4kgvllwzgw6wexlgkpjmcssu4gqnqwdyp`.
