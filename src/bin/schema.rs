@@ -1,6 +1,6 @@
 use cosmwasm_schema::write_api;
 
-use haypay::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use heypay::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 fn main() {
     write_api! {

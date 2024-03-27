@@ -69,5 +69,5 @@ impl ClaimData {
     }
 }
 
-pub const CLAIMS: Map<&str, Vec<ClaimData>> = Map::new("haypay");
+pub const CLAIMS: Map<&str, Vec<ClaimData>> = Map::new("heypay");
 pub const ADMIN: Item<String> = Item::new("Admin");

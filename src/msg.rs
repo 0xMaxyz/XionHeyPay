@@ -37,7 +37,7 @@ pub struct TokenReceiveMsg {
 #[cw_serde]
 pub struct TokenClaimMsg {
     pub jwt: String,
-    pub aud: String,
+    pub testing: bool,
 }
 
 #[cw_serde]

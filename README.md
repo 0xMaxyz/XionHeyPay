@@ -2,7 +2,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![CosmWasm](https://img.shields.io/badge/CosmWasm-green)
 ![Xion](https://img.shields.io/badge/Xion-black)
-# HayPay Contract
+# HeyPay Contract
 ## Compiling and testing
 ### Requirements
 This project is bootstrapped from CosmWasm Starter Pack ([minimal code repo](https://github.com/CosmWasm/cw-template?tab=readme-ov-file#creating-a-new-repo-from-template)), you need rust to build and test the contract, instructions for installing rust, could be found [here](https://www.rust-lang.org/tools/install). Additionally, you need the Wasm rust compiler to build Wasm binaries:
@@ -60,4 +60,4 @@ Upon successful deployment, the script provides the `code_id`, `contract_address
 The `./Scripts/test.sh` script helps test the contract on the testnet, but it requires a JWT containing your email address and Xion address. Manual setup of this custom JWT can be complex, you have to inject email address and xion address in your request to receive a valid JWT with custom claims.
 A video of our demo using our front app is [here](https://youtu.be/NIFiNzDLiOY).
 ## Deployed contract in Xion Testnet
-The contract is deployed to Xion testnet at `xion1zt64jdruawm4dl0svxe973gkd4kgvllwzgw6wexlgkpjmcssu4gqnqwdyp`.
+The contract is deployed to Xion testnet at `xion1xg3elrmwhu0u0e2yq2vexxs383r0clcyyc2nvezygn3mmgdxx9kq3x5l9e`.

@@ -9,11 +9,14 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
-    #[error("invalid jwt aud")]
-    InvalidJWTAud,
+    #[error("invalid jwt kid")]
+    InvalidJWTKid,
 
     #[error("invalid token")]
     InvalidToken,
+
+    #[error("expired token")]
+    ExpiredToken,
 
     #[error("nothing to claim")]
     NotClaimable,

@@ -23,7 +23,7 @@ transfer_token() {
   TOKEN_MSG=$(echo -e "{ \"email\": \"$TEST_EMAIL\",\"memo\": \"\" }" | base64 -w 0)
   SEND_MSG="{
   \"send\": {
-    \"contract\": \"$HAYPAY_ADDRESS\",
+    \"contract\": \"$HEYPAY_ADDRESS\",
     \"amount\": \"1000\",
     \"msg\": \"$TOKEN_MSG\"
   }
@@ -32,14 +32,14 @@ transfer_token() {
   #echo -e "\033[2K"
   TX_HASH=$(echo "$RESP" | jq -r '.txhash')
   echo -en "033[1A\033[2K\r"
-  echo "Tx Hash for transfering token to HayPay contract: https://explorer.burnt.com/xion-testnet-1/tx/${TX_HASH}"
+  echo "Tx Hash for transfering token to HeyPay contract: https://explorer.burnt.com/xion-testnet-1/tx/${TX_HASH}"
 }
 
 claimable() {
   echo -n "Querying the claimable tokens for the test email..."
   QUERY_MSG="{\"claims\":{ \"email\": \"$TEST_EMAIL\" }}"
   BASE64_Q_MSG=$(echo "$QUERY_MSG" | base64)
-  RESP=$(xiond query wasm contract-state smart $HAYPAY_ADDRESS $BASE64_Q_MSG --b64 --node $RPC --output json)
+  RESP=$(xiond query wasm contract-state smart $HEYPAY_ADDRESS $BASE64_Q_MSG --b64 --node $RPC --output json)
   BALANCE=$(echo "$RESP" | jq -r '.data.claims')
   echo -en "033[1A\033[2K\r"
   echo "Total amount of claimable tokens for test email is: {$BALANCE}"
@@ -58,7 +58,7 @@ claim() {
   }
 }"
 
-  RESP=$(xiond tx wasm execute $HAYPAY_ADDRESS "$CLAIM_MSG" --from $DEPLOYER_ADDRESS --chain-id $CHAIN_ID --gas 2000000 --gas-prices $GAS_PRICE --node $RPC --output json --yes <<<"$password")
+  RESP=$(xiond tx wasm execute $HEYPAY_ADDRESS "$CLAIM_MSG" --from $DEPLOYER_ADDRESS --chain-id $CHAIN_ID --gas 2000000 --gas-prices $GAS_PRICE --node $RPC --output json --yes <<<"$password")
   TX_HASH=$(echo "$RESP" | jq -r '.txhash')
   echo -en "033[1A\033[2K\r"
   echo "Tx Hash for claiming tokens: https://explorer.burnt.com/xion-testnet-1/tx/${TX_HASH}"
@@ -91,7 +91,7 @@ echo -en "\033[2K\r"
 
 query "$DEPLOYER_ADDRESS" "Deployer" "$TOKEN_ADDRESS"
 
-query "$HAYPAY_ADDRESS" "Haypay contract" "$TOKEN_ADDRESS"
+query "$HEYPAY_ADDRESS" "Heypay contract" "$TOKEN_ADDRESS"
 
 claimable
 
@@ -105,6 +105,6 @@ claimable
 
 query "$DEPLOYER_ADDRESS" "Deployer" "$TOKEN_ADDRESS"
 
-query "$HAYPAY_ADDRESS" "Haypay contract" "$TOKEN_ADDRESS"
+query "$HEYPAY_ADDRESS" "Heypay contract" "$TOKEN_ADDRESS"
 
 #rm .t

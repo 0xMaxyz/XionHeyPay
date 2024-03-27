@@ -136,15 +136,15 @@ mod execute {
         _msg: TokenClaimMsg,
     ) -> Result<Response, ContractError> {
         // verify token and get email
-        match crate::jwt::Token::verify(&_msg.aud, &_msg.jwt) {
+        match crate::jwt::Token::verify(&_msg.jwt, _env.block.time.seconds(), _msg.testing) {
             Ok(payload) => {
                 // check if sender is equal to address in token
-                let addr_in_jwt = _deps.api.addr_validate(&payload.xion_address)?;
+                let addr_in_jwt = _deps.api.addr_validate(&payload.nonce)?;
                 if addr_in_jwt != _info.sender {
                     return Err(ContractError::Unauthorized {});
                 }
                 // Then the msg.sender is the one who owns the token
-                let email = payload.email_address;
+                let email = payload.email;
                 // Check for Claims
                 if CLAIMS.has(_deps.as_ref().storage, &email) {
                     let txs =

@@ -1,11 +1,6 @@
 {
   "rust-analyzer.linkedProjects": [
     "./Cargo.toml",
-    "./Cargo.toml",
-    "./Cargo.toml",
-    "./Cargo.toml",
-    "./Cargo.toml"
   ],
   "debug.allowBreakpointsEverywhere": true,
-  "cosmywasmy.chainConfigName": "Juno uni-6"
 }

@@ -2,7 +2,7 @@
 
 use crate::{
     msg::{QueryClaimResponse, QueryMsg, TokenReceiveMsg},
-    unit_tests::EMAIL_2,
+    unit_tests::EMAIL,
 };
 use cosmwasm_std::{coins, to_json_binary, Addr, Empty, Uint128};
 use cw20::{Cw20Coin, Cw20Contract, Cw20ExecuteMsg};
@@ -40,21 +40,21 @@ fn test_receive() {
         .instantiate_contract(cw20_id, owner.clone(), &msg, &[], "token", None)
         .unwrap();
 
-    // setup haypay
-    let haypay_id = router.store_code(haypay_contract());
-    let haypay_addr = router
+    // setup heypay
+    let heypay_id = router.store_code(heypay_contract());
+    let heypay_addr = router
         .instantiate_contract(
-            haypay_id,
+            heypay_id,
             owner.clone(),
             &crate::msg::InstantiateMsg {},
             &[],
-            "HayPay",
+            "HeyPay",
             None,
         )
         .unwrap();
 
     // two different contracts
-    assert_ne!(haypay_addr, cw20_addr);
+    assert_ne!(heypay_addr, cw20_addr);
 
     let cash = Cw20Contract(cw20_addr.clone());
 
@@ -63,18 +63,18 @@ fn test_receive() {
 
     // Create ReceiveMsg (for calling Send)
     let token_msg = TokenReceiveMsg {
-        email: EMAIL_2.to_owned(),
+        email: EMAIL.to_owned(),
         memo: Option::Some("This is a test memo".to_string()),
     };
 
     // create send token message
     let send_token_msg = Cw20ExecuteMsg::Send {
-        contract: haypay_addr.to_string(),
+        contract: heypay_addr.to_string(),
         amount: Uint128::new(1),
         msg: to_json_binary(&token_msg).unwrap(),
     };
 
-    // send some cw20 tokens to haypay contract
+    // send some cw20 tokens to heypay contract
     _ = router
         .execute_contract::<Cw20ExecuteMsg>(owner.clone(), cw20_addr.clone(), &send_token_msg, &[])
         .unwrap();
@@ -86,17 +86,17 @@ fn test_receive() {
 
     // create query request to get the claims for email_1
     let _qmsg = QueryMsg::Claims {
-        email: EMAIL_2.to_owned(),
+        email: EMAIL.to_owned(),
     };
 
     let query_resp: QueryClaimResponse =
-        router.wrap().query_wasm_smart(haypay_addr, &_qmsg).unwrap();
+        router.wrap().query_wasm_smart(heypay_addr, &_qmsg).unwrap();
     _ = &query_resp.claims;
 }
 
 //
 
-fn haypay_contract() -> Box<dyn Contract<Empty>> {
+fn heypay_contract() -> Box<dyn Contract<Empty>> {
     let contract = ContractWrapper::new(
         crate::contract::execute,
         crate::contract::instantiate,

@@ -2,7 +2,6 @@
 
 use crate::{
     contract::{self, instantiate},
-    jwt::verify,
     msg::{self, InstantiateMsg, QueryClaimResponse, QueryMsg},
 };
 use cosmwasm_std::{
@@ -12,29 +11,10 @@ use cosmwasm_std::{
 };
 use cw20::Cw20ReceiveMsg;
 
-pub const SESSION_JWT_1:&str="eyJhbGciOiJSUzI1NiIsImtpZCI6Imp3ay1saXZlLTVjYjQwZjE4LTdiYjUtNGEwNi04ZjUzLTc4NjdiOGIzNjkzMCIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsicHJvamVjdC1saXZlLTdlNGEzMjIxLTc5Y2QtNGYzNC1hYzFkLWZlZGFjNGJkZTEzZSJdLCJleHAiOjE3MDc3NDYzMDgsImh0dHBzOi8vc3R5dGNoLmNvbS9zZXNzaW9uIjp7ImlkIjoic2Vzc2lvbi1saXZlLTg2NGJkNDMyLTcwMWItNGQ1OS05MmNjLWRlMGU5YjhiZjVjNSIsInN0YXJ0ZWRfYXQiOiIyMDI0LTAyLTEyVDEzOjUwOjU4WiIsImxhc3RfYWNjZXNzZWRfYXQiOiIyMDI0LTAyLTEyVDEzOjUzOjI4WiIsImV4cGlyZXNfYXQiOiIyMDI0LTAzLTEzVDEzOjUzOjI4WiIsImF0dHJpYnV0ZXMiOnsidXNlcl9hZ2VudCI6Ik1vemlsbGEvNS4wIChXaW5kb3dzIE5UIDEwLjA7IFdpbjY0OyB4NjQ7IHJ2OjEyMi4wKSBHZWNrby8yMDEwMDEwMSBGaXJlZm94LzEyMi4wIiwiaXBfYWRkcmVzcyI6IjMuOS4yMTIuMjU1In0sImF1dGhlbnRpY2F0aW9uX2ZhY3RvcnMiOlt7InR5cGUiOiJvdHAiLCJkZWxpdmVyeV9tZXRob2QiOiJlbWFpbCIsImxhc3RfYXV0aGVudGljYXRlZF9hdCI6IjIwMjQtMDItMTJUMTM6NTA6NThaIiwiZW1haWxfZmFjdG9yIjp7ImVtYWlsX2lkIjoiZW1haWwtbGl2ZS01ODlkZWRlNi01YzQwLTRjYTUtYjA1OC1iNWI1NjljZTc2YWQiLCJlbWFpbF9hZGRyZXNzIjoidGVzdDFAZ3JyLmxhIn19XX0sImlhdCI6MTcwNzc0NjAwOCwiaXNzIjoic3R5dGNoLmNvbS9wcm9qZWN0LWxpdmUtN2U0YTMyMjEtNzljZC00ZjM0LWFjMWQtZmVkYWM0YmRlMTNlIiwibmJmIjoxNzA3NzQ2MDA4LCJzdWIiOiJ1c2VyLWxpdmUtYTlmMzUwNDYtOTE5Zi00YjJjLWI2YTAtZjRmNGRkODRkZmQ2IiwidHJhbnNhY3Rpb25faGFzaCI6InR4aGFzaCIsInhpb25fYWRkcmVzcyI6ImFkZHJlc3MxIn0.yn7uwUKFz9VlVPKXIcVJirMGhzYdmDXI_fTlHolqGnFPiqoHubm9mpEwIUCJdFghD89Nh9AmZYsHPC4ySNOfTTZ9LWHnSVSPJoyh8JmGNuZM45Zu0S6RrfZaAPY7QHaPP1nUYGl3QsSEVQuDaGdM4KIni-b_HdSMqvAiJoB0-LnDK8VdcHl7KtBOkcngZeEP5hR_yre95rD2Na7lVVwTAh-WxvnPoc1AHl0IUQun0Kf112ej67LtRzDcC98A90QxYRHsA5lUlgywdL6LmWqiiDNsoWwZn0ELQ0FDG5naHVFHLdKReA51PZhN7gcGXqopFh6IzGWZWVNVhmPCZRwtLA";
-//pub const SESSION_JWT_2: &str = "eyJhbGciOiJSUzI1NiIsImtpZCI6Imp3ay1saXZlLTVjYjQwZjE4LTdiYjUtNGEwNi04ZjUzLTc4NjdiOGIzNjkzMCIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsicHJvamVjdC1saXZlLTdlNGEzMjIxLTc5Y2QtNGYzNC1hYzFkLWZlZGFjNGJkZTEzZSJdLCJleHAiOjE3MDc3NDY0NDksImh0dHBzOi8vc3R5dGNoLmNvbS9zZXNzaW9uIjp7ImlkIjoic2Vzc2lvbi1saXZlLWUzZGE1Y2I4LWRjYjctNDM0Yi04NmI1LWM3NWJmYzI4OGZkMSIsInN0YXJ0ZWRfYXQiOiIyMDI0LTAyLTEyVDEzOjU0OjQ3WiIsImxhc3RfYWNjZXNzZWRfYXQiOiIyMDI0LTAyLTEyVDEzOjU1OjQ5WiIsImV4cGlyZXNfYXQiOiIyMDI0LTAzLTEzVDEzOjU1OjQ5WiIsImF0dHJpYnV0ZXMiOnsidXNlcl9hZ2VudCI6Ik1vemlsbGEvNS4wIChXaW5kb3dzIE5UIDEwLjA7IFdpbjY0OyB4NjQ7IHJ2OjEyMi4wKSBHZWNrby8yMDEwMDEwMSBGaXJlZm94LzEyMi4wIiwiaXBfYWRkcmVzcyI6IjMuOS4yMTIuMjU1In0sImF1dGhlbnRpY2F0aW9uX2ZhY3RvcnMiOlt7InR5cGUiOiJvdHAiLCJkZWxpdmVyeV9tZXRob2QiOiJlbWFpbCIsImxhc3RfYXV0aGVudGljYXRlZF9hdCI6IjIwMjQtMDItMTJUMTM6NTQ6NDdaIiwiZW1haWxfZmFjdG9yIjp7ImVtYWlsX2lkIjoiZW1haWwtbGl2ZS0zZWVmZTFlOC01NDExLTQ0NDQtYmY5YS04ZTc0MjdhNzZhMGYiLCJlbWFpbF9hZGRyZXNzIjoidGVzdDJAZ3JyLmxhIn19XX0sImlhdCI6MTcwNzc0NjE0OSwiaXNzIjoic3R5dGNoLmNvbS9wcm9qZWN0LWxpdmUtN2U0YTMyMjEtNzljZC00ZjM0LWFjMWQtZmVkYWM0YmRlMTNlIiwibmJmIjoxNzA3NzQ2MTQ5LCJzdWIiOiJ1c2VyLWxpdmUtNGRhNWE1N2MtMGMzOC00YWUxLTlkZWEtZTMyYTAyZDJlZWY2IiwidHJhbnNhY3Rpb25faGFzaCI6InR4aGFzaCIsInhpb25fYWRkcmVzcyI6ImFkZHJlc3MyIn0.gvmsHDukM9Fn2cr_PflmZhG4aQq9f8EXAPW72Ci6Egw8IAmuLLiTd0RyvIRKYZAnj7w3U534ImKd19l6090urzO7E913SRCDvz_8BQ8GOU25Lvo671VWrCVzqcOV7Z43bGQJrVWsZqPuWnAtzYg8fj0KwCvMHJPjpJxlQHXt5q_Nn8ZG0oXgxIEdMN7ynNTxcZNcyDVxfnRyJNq9hGHdBJ3Eh-9EOFZBNVfILCTS7Liel91sAs5AVEaftTPtg0P3m1POK9Y-4-rsKa2PLJM2-54D3o9eUU7Jsq6OI-99cMb6ITueZQ8NPR293Vchq2kfSoeR-i2sDdAhEUwiXA2-9w";
-pub const AUDIENCE: &str = "project-live-7e4a3221-79cd-4f34-ac1d-fedac4bde13e";
-pub const EMAIL_1: &str = "test1@grr.la";
-pub const EMAIL_2: &str = "test2@grr.la";
-
-#[test]
-fn test_get_email_from_valid_jwt() {
-    let email_extracted_from_token = verify(&SESSION_JWT_1.as_bytes(), &AUDIENCE).unwrap();
-    assert_eq!(EMAIL_1, email_extracted_from_token);
-}
-
-#[test]
-fn test_email_extract_with_wrong_jwt() {
-    _ = match verify(&SESSION_JWT_1[1..].as_bytes(), &AUDIENCE) {
-        Ok(_) => {
-            assert!(false)
-        }
-        Err(_) => {
-            assert!(true)
-        }
-    };
-}
+pub const SESSION_JWT:&str="eyJhbGciOiJSUzI1NiIsImtpZCI6ImFkZjVlNzEwZWRmZWJlY2JlZmE5YTYxNDk1NjU0ZDAzYzBiOGVkZjgiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyMjIwMzc4MzcxNTQtcG5oNXJkcjhkOWh2Zmo5aW9vcmU2YW1iMGdxczRiajkuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyMjIwMzc4MzcxNTQtcG5oNXJkcjhkOWh2Zmo5aW9vcmU2YW1iMGdxczRiajkuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDE5ODkxODYwMDE4MjUxMDI1NTAiLCJlbWFpbCI6IjB4bWF4eXpAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5vbmNlIjoiYWRkcmVzczEiLCJuYmYiOjE3MTE1MzU2MzIsIm5hbWUiOiJNYXgiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSlA4RFVmbnhKbVo0NUlDd2JCR2h4VlByMTFmdWFGdnMyRVRNRWh6dmNQUnc9czk2LWMiLCJnaXZlbl9uYW1lIjoiTWF4IiwiaWF0IjoxNzExNTM1OTMyLCJleHAiOjE3MTE1Mzk1MzIsImp0aSI6IjllYzg1NGQwNzQ1NTdmZjEzZTgwMjRlZDEzYTlmY2ViNmI3YTI3OTMifQ.wUXRUSEgOytmdalPHzZtqcUNhfYkvEC1KpSQK5OMre5qVT6-sahR7VWLIkTKz7gs6SNTFmecM1Kceis3CSjKKLxESZU2RrDZPlE7lUvZFy7DSc5KfaE46jOj7hYnsheUmG2xxVqP2ismzfeQwKN00qf8BrmuF8-DEP4TwWUFZ6LfNBfHmjxnIdzx5rt-px_GHvSgs8P_SG1zpCrVov2_eDzcLd1yok3fHKv6LQQGsl91tcZwnJukb1_XIIQy7HYFpdj8ixrVRwAOMrYsT9n_U3BZDfe2wjoLjEwTSwBQuJdcYu2ie-KbReVO6lGtEmIA7eZzmIgNiBZgoWSrW89ULA";
+pub const AUDIENCE: &str =
+    "222037837154-pnh5rdr8d9hvfj9ioore6amb0gqs4bj9.apps.googleusercontent.com";
+pub const EMAIL: &str = "0xmaxyz@gmail.com";
 
 #[test]
 fn test_instantiate() {
@@ -59,11 +39,11 @@ fn test_execute_receive_unit() {
         info.clone(),
         amount,
         "sender".to_string(),
-        EMAIL_1.to_string(),
+        EMAIL.to_string(),
     );
 
     // query claim
-    let query_resp = query_claim(dep.as_ref(), EMAIL_1.to_string());
+    let query_resp = query_claim(dep.as_ref(), EMAIL.to_string());
     assert_eq!(
         query_resp.claims.iter().map(|q| q.amount).sum::<Uint128>(),
         amount
@@ -86,7 +66,7 @@ fn test_execute_receive_should_fail_with_wrong_email() {
     );
 
     // query claim
-    let query_resp = query_claim(dep.as_ref(), EMAIL_1.to_string());
+    let query_resp = query_claim(dep.as_ref(), EMAIL.to_string());
     assert_eq!(
         query_resp.claims.iter().map(|q| q.amount).sum::<Uint128>(),
         amount
@@ -95,7 +75,7 @@ fn test_execute_receive_should_fail_with_wrong_email() {
 
 #[test]
 fn test_query_claims() {
-    let query_resp = query_claim(mock_dependencies().as_ref(), EMAIL_1.to_string());
+    let query_resp = query_claim(mock_dependencies().as_ref(), EMAIL.to_string());
     assert!(query_resp
         .claims
         .iter()
@@ -115,11 +95,11 @@ fn test_claim_by_email() {
         info.clone(),
         amount,
         "sender".to_string(),
-        EMAIL_1.to_string(),
+        EMAIL.to_string(),
     );
 
     // query claim
-    let query_resp = query_claim(dep.as_ref(), EMAIL_1.to_string());
+    let query_resp = query_claim(dep.as_ref(), EMAIL.to_string());
     assert_eq!(
         query_resp.claims.iter().map(|q| q.amount).sum::<Uint128>(),
         amount
@@ -128,13 +108,13 @@ fn test_claim_by_email() {
     // claim the tokens by email
     claim_by_email(
         AUDIENCE.to_string(),
-        SESSION_JWT_1.to_string(),
+        SESSION_JWT.to_string(),
         dep.as_mut(),
         mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
         1,
     );
     // email1 shall have no more claims
-    let query_resp = query_claim(dep.as_ref(), EMAIL_1.to_string());
+    let query_resp = query_claim(dep.as_ref(), EMAIL.to_string());
     assert_eq!(
         query_resp.claims.iter().map(|q| q.amount).sum::<Uint128>(),
         Uint128::zero()
@@ -153,11 +133,11 @@ fn test_aggregate_multiple_receives() {
             info.clone(),
             amount,
             "sender".to_string() + &index.to_string(),
-            EMAIL_1.to_string(),
+            EMAIL.to_string(),
         );
     }
     // query claims
-    let query_resp = query_claim(dep.as_ref(), EMAIL_1.to_string());
+    let query_resp = query_claim(dep.as_ref(), EMAIL.to_string());
     assert_eq!(
         query_resp.claims.iter().map(|q| q.amount).sum::<Uint128>(),
         amount.saturating_mul(Uint128::new(4))
@@ -165,7 +145,7 @@ fn test_aggregate_multiple_receives() {
     // Claim
     claim_by_email(
         AUDIENCE.to_string(),
-        SESSION_JWT_1.to_string(),
+        SESSION_JWT.to_string(),
         dep.as_mut(),
         mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
         4,
@@ -184,7 +164,7 @@ fn test_claim_multi_token() {
             info.clone(),
             amount,
             "sender".to_string() + &i.to_string(),
-            EMAIL_1.to_string(),
+            EMAIL.to_string(),
         );
     }
     // tokenB
@@ -196,12 +176,12 @@ fn test_claim_multi_token() {
             info.clone(),
             amount,
             "sender".to_string() + &i.to_string(),
-            EMAIL_1.to_string(),
+            EMAIL.to_string(),
         );
     }
 
     // query claims
-    let query_resp = query_claim(dep.as_ref(), EMAIL_1.to_string());
+    let query_resp = query_claim(dep.as_ref(), EMAIL.to_string());
     assert_eq!(
         query_resp.claims.iter().map(|q| q.amount).sum::<Uint128>(),
         amount.saturating_mul(Uint128::new(8))
@@ -209,7 +189,7 @@ fn test_claim_multi_token() {
     // Claim
     claim_by_email(
         AUDIENCE.to_string(),
-        SESSION_JWT_1.to_string(),
+        SESSION_JWT.to_string(),
         dep.as_mut(),
         mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
         8,
@@ -228,11 +208,11 @@ fn test_claim_only_once() {
         info.clone(),
         amount,
         "sender".to_string(),
-        EMAIL_1.to_string(),
+        EMAIL.to_string(),
     );
 
     // query claim
-    let query_resp = query_claim(dep.as_ref(), EMAIL_1.to_string());
+    let query_resp = query_claim(dep.as_ref(), EMAIL.to_string());
     assert_eq!(
         query_resp.claims.iter().map(|q| q.amount).sum::<Uint128>(),
         amount
@@ -241,7 +221,7 @@ fn test_claim_only_once() {
     // claim the tokens by email
     claim_by_email(
         AUDIENCE.to_string(),
-        SESSION_JWT_1.to_string(),
+        SESSION_JWT.to_string(),
         dep.as_mut(),
         mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
         1,
@@ -250,7 +230,7 @@ fn test_claim_only_once() {
     // panics
     claim_by_email(
         AUDIENCE.to_string(),
-        SESSION_JWT_1.to_string(),
+        SESSION_JWT.to_string(),
         dep.as_mut(),
         mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
         1,
@@ -269,11 +249,11 @@ fn test_claim_panicks_with_wrong_sender() {
         info.clone(),
         amount,
         "sender".to_string(),
-        EMAIL_1.to_string(),
+        EMAIL.to_string(),
     );
 
     // query claim
-    let query_resp = query_claim(dep.as_ref(), EMAIL_1.to_string());
+    let query_resp = query_claim(dep.as_ref(), EMAIL.to_string());
     assert_eq!(
         query_resp.claims.iter().map(|q| q.amount).sum::<Uint128>(),
         amount
@@ -282,7 +262,7 @@ fn test_claim_panicks_with_wrong_sender() {
     // should panic
     claim_by_email(
         AUDIENCE.to_string(),
-        SESSION_JWT_1.to_string(),
+        SESSION_JWT.to_string(),
         dep.as_mut(),
         // another sender tries to claim tokens with valid jwt, but jwt is signed for address1
         mock_info("address2", &[]),
@@ -301,13 +281,13 @@ fn test_empty_memo() {
         info.clone(),
         amount,
         "sender".to_string(),
-        EMAIL_1.to_string(),
+        EMAIL.to_string(),
         Option::None,
     );
 
     claim_by_email(
         AUDIENCE.to_string(),
-        SESSION_JWT_1.to_string(),
+        SESSION_JWT.to_string(),
         dep.as_mut(),
         mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
         1,
@@ -326,13 +306,13 @@ fn test_panic_long_memo() {
         info.clone(),
         amount,
         "sender".to_string(),
-        EMAIL_1.to_string(),
-        Option::Some(SESSION_JWT_1.to_owned()),
+        EMAIL.to_string(),
+        Option::Some(SESSION_JWT.to_owned()),
     );
 
     claim_by_email(
         AUDIENCE.to_string(),
-        SESSION_JWT_1.to_string(),
+        SESSION_JWT.to_string(),
         dep.as_mut(),
         mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
         1,
@@ -347,8 +327,8 @@ fn query_claim(_deps: Deps, email: String) -> QueryClaimResponse {
 
 fn claim_by_email(_aud: String, _jwt: String, _dep: DepsMut, _info: MessageInfo, _attr_qty: usize) {
     let token_claim_msg = crate::msg::TokenClaimMsg {
-        aud: _aud.to_owned(),
         jwt: _jwt.to_owned(),
+        testing: true,
     };
     let claim_msg = crate::msg::ExecuteMsg::Claim {
         msg: token_claim_msg,

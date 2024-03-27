@@ -1,7 +1,5 @@
-use std::ops::Add;
-
 use crate::error::ContractError;
-use crate::error::ContractError::{InvalidJWTAud, InvalidToken};
+use crate::error::ContractError::InvalidJWTKid;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine as _;
 use cosmwasm_schema::cw_serde;
@@ -11,38 +9,75 @@ use rsa::{BigUint, Pkcs1v15Sign, RsaPublicKey};
 
 use sha2::{Digest, Sha256};
 
-static AUD_KEY_MAP: Map<&'static str, &'static str> = phf_map! {
-    "project-live-7e4a3221-79cd-4f34-ac1d-fedac4bde13e" => "7DEDs11mtM85pjdpELjoNBqBPcPf3rUU7llkoycaUfhlQF3ghMVBrIoVs4ivaBGJiBGBEnM64lKeCMYDaTDa67AUsUIahyBtKTHvZ_tEgOiqX6feWg-z6MsoA7HFoxbIzgwTGEVcFzy5y0BQEqffPstSBLUeZRfh7NGSXbGoo5zXPx1oEgrFtzfpnBgz-OP2rg1JLdycMP3YoKFIu5v2nnRobvlEraXil3ETJ-c6TLcaOctd1T4HSFNk5xy7HqiqMqU4Ixy5HfzC7gJqo1g1ppPrkSY36hpPgtpa6xR161cPr9Acvejqt8LK5xpoeW8oS67r1_m-TkKjTOhKzjbVNw;AQAB",
+static KID_MAP: Map<&'static str, &'static str> = phf_map! {
+    // "project-live-7e4a3221-79cd-4f34-ac1d-fedac4bde13e" => "7DEDs11mtM85pjdpELjoNBqBPcPf3rUU7llkoycaUfhlQF3ghMVBrIoVs4ivaBGJiBGBEnM64lKeCMYDaTDa67AUsUIahyBtKTHvZ_tEgOiqX6feWg-z6MsoA7HFoxbIzgwTGEVcFzy5y0BQEqffPstSBLUeZRfh7NGSXbGoo5zXPx1oEgrFtzfpnBgz-OP2rg1JLdycMP3YoKFIu5v2nnRobvlEraXil3ETJ-c6TLcaOctd1T4HSFNk5xy7HqiqMqU4Ixy5HfzC7gJqo1g1ppPrkSY36hpPgtpa6xR161cPr9Acvejqt8LK5xpoeW8oS67r1_m-TkKjTOhKzjbVNw;AQAB",
+    "09bcf8028e06537d4d3ae4d84f5c5babcf2c0f0a" => "vdtZ3cfuh44JlWkJRu-3yddVp58zxSHwsWiW_jpaXgpebo0an7qY2IEs3D7kC186Bwi0T7Km9mUcDbxod89IbtZuQQuhxlgaXB-qX9GokNLdqg69rUaealXGrCdKOQ-rOBlNNGn3M4KywEC98KyQAKXe7prs7yGqI_434rrULaE7ZFmLAzsYNoZ_8l53SGDiRaUrZkhxXOEhlv1nolgYGIH2lkhEZ5BlU53BfzwjO-bLeMwxJIZxSIOy8EBIMLP7eVu6AIkAr9MaDPJqeF7n7Cn8yv_qmy51bV-INRS-HKRVriSoUxhQQTbvDYYvJzHGYu_ciJ4oRYKkDEwxXztUew;AQAB",
+    "adf5e710edfebecbefa9a61495654d03c0b8edf8" => "y48N6JB-AKq1-Rv4SkwBADU-hp4zXHU-NcCUwxD-aS9vr4EoT9qrjoJ-YmkaEpq9Bmu1yXZZK_h_9QS3xEsO8Rc_WSvIQCJtIaDQz8hxk4lUjUQjMB4Zf9vdTmf8KdktI9tCYCbuSbLC6TegjDM9kbl9CNs3m9wSVeO_5JXJQC0Jr-Oj7Gz9stXm0Co3f7RCxrD08kLelXaAglrd5TeGjZMyViC4cw1gPaj0Cj6knDn8UlzR_WuBpzs_ies5BrbzX-yht0WfnhXpdpiGNMbpKQD04MmPdMCYq8ENF7q5_Ok7dPsVj1vHA6vFGnf7qE3smD157szsnzn0NeXIbRMnuQ;AQAB",
 };
+static AUDIENCE: &'static str =
+    "222037837154-pnh5rdr8d9hvfj9ioore6amb0gqs4bj9.apps.googleusercontent.com";
 pub struct Token {
-    //header: String,
-    payload: String,
+    header: Header,
+    payload: Payload,
     digest: String,
     signature: String,
 }
 #[cw_serde]
 pub struct Payload {
-    pub email_address: String,
-    pub xion_address: String,
-    pub aud: String,
+    iss: String,
+    azp: String,
+    aud: String,
+    sub: String,
+    pub email: String,
+    email_verified: bool,
+    pub nonce: String,
+    nbf: u64,
+    name: String,
+    picture: String,
+    given_name: String,
+    iat: u64,
+    exp: u64,
+    jti: String,
+}
+
+#[cw_serde]
+pub struct Header {
+    pub alg: String,
+    pub kid: String,
+    pub typ: String,
 }
 
 impl Token {
-    pub fn verify(aud: &str, jwt: &str) -> Result<Payload, ContractError> {
-        let key = Self::verify_audience(&aud)?;
+    pub fn verify(
+        jwt: &str,
+        timestamp: u64,
+        bypasstimestamp: bool,
+    ) -> Result<Payload, ContractError> {
+        // deserialize token
         let _token = match Self::from_string(&jwt) {
             Some(t) => Ok(t),
             None => Err(ContractError::InvalidToken),
         }?;
+        // get key using the kid
+        let key = Self::get_key(&_token.header.kid)?;
+        // validate audience
+        if _token.payload.aud != AUDIENCE {
+            return Err(ContractError::InvalidEmail);
+        }
+        // validate timestamp
+        if !bypasstimestamp && (timestamp < _token.payload.iat || timestamp > _token.payload.exp) {
+            return Err(ContractError::ExpiredToken);
+        }
+        // validate the signature
         Self::validate_signature(&_token, &key)?;
-        Self::extract_payload(&_token)
+        Ok(_token.payload)
     }
     pub fn from_string(token: &str) -> Option<Self> {
         let parts: Vec<&str> = token.split('.').collect();
         match parts.len() {
             3 => Some(Self {
-                //header: parts[0].to_string(),
-                payload: parts[1].to_string(),
+                header: Self::deserialize_header(parts[0]).unwrap(),
+                payload: Self::deserialize_payload(parts[1]).unwrap(),
                 digest: [parts[0], ".", parts[1]].concat(),
                 signature: parts[2].to_string(),
             }),
@@ -51,9 +86,7 @@ impl Token {
     }
 
     pub fn validate_signature(&self, key: &str) -> Result<(), ContractError> {
-        let signature = URL_SAFE_NO_PAD
-            .decode(&self.signature)
-            .map_err(|_| ContractError::InvalidToken)?;
+        let signature = Self::convert_from_base64(&self.signature, ContractError::InvalidToken)?;
 
         let pubkey = Self::build_pubkey(&key).map_err(|_| ContractError::InvalidKey)?;
 
@@ -71,172 +104,56 @@ impl Token {
         Ok(())
     }
 
-    fn verify_audience(aud: &str) -> Result<String, ContractError> {
-        if !AUD_KEY_MAP.contains_key(aud) {
-            return Err(InvalidJWTAud);
-        }
-
-        let key = match AUD_KEY_MAP.get(aud) {
-            None => return Err(InvalidJWTAud),
+    fn get_key(kid: &str) -> Result<String, ContractError> {
+        let key = match KID_MAP.get(kid) {
+            None => return Err(InvalidJWTKid),
             Some(k) => *k,
         };
         Ok(key.to_string())
     }
 
     fn build_pubkey(key: &str) -> Result<RsaPublicKey, ContractError> {
+        // split the key
         let mut key_split = key.split(';');
-        let modulus = key_split.next().ok_or(ContractError::InvalidKey)?;
-        let mod_bytes = URL_SAFE_NO_PAD
-            .decode(modulus)
-            .map_err(|_| ContractError::InvalidKey)?;
-        let exponent = key_split.next().ok_or(ContractError::InvalidKey)?;
-        let exp_bytes = URL_SAFE_NO_PAD
-            .decode(exponent)
-            .map_err(|_| ContractError::InvalidKey)?;
-        let pubkey = RsaPublicKey::new(
-            BigUint::from_bytes_be(mod_bytes.as_slice()),
-            BigUint::from_bytes_be(exp_bytes.as_slice()),
-        )
-        .map_err(|_| ContractError::InvalidKey)?;
+        // extract the modulus and exponent
+        let modulus_base64 = key_split.next().ok_or(ContractError::InvalidKey)?;
+        let exponent_base64 = key_split.next().ok_or(ContractError::InvalidKey)?;
+        // decode modulus and exponent
+        let modulus_bytes = Self::convert_from_base64(modulus_base64, ContractError::InvalidKey)?;
+        let exponent_bytes = Self::convert_from_base64(exponent_base64, ContractError::InvalidKey)?;
+        // convert to BigUint
+        let modulus = BigUint::from_bytes_be(modulus_bytes.as_slice());
+        let exponent = BigUint::from_bytes_be(exponent_bytes.as_slice());
+        // build the public key
+        let pubkey = RsaPublicKey::new(modulus, exponent).map_err(|_| ContractError::InvalidKey)?;
 
         Ok(pubkey)
     }
 
-    fn extract_payload(&self) -> Result<Payload, ContractError> {
-        // decode base64
-        let decoded_payload = URL_SAFE_NO_PAD
-            .decode(&self.payload)
-            .map_err(|_| ContractError::InvalidToken)?;
+    fn deserialize_payload(pl: &str) -> Result<Payload, ContractError> {
+        let decoded_payload = Self::convert_from_base64(pl, ContractError::InvalidToken)?;
+
         let utf8_str = String::from_utf8_lossy(&decoded_payload).to_string();
 
-        let aud = Self::extract_aud(&utf8_str)?;
+        let payload: Payload =
+            serde_json_wasm::from_str(&utf8_str).map_err(|_| ContractError::InvalidToken)?;
 
-        let start_index = Self::get_colon_index(&aud)?;
-        let end_index = Self::get_colon_index(&aud[1.add(start_index)..])?;
-
-        let _payload = Payload {
-            email_address: Self::extract_string(&utf8_str, "\"email_address\":\"")?,
-            xion_address: Self::extract_string(&utf8_str, "\"xion_address\":\"")?,
-            aud: aud[start_index..end_index].to_string(),
-        };
-
-        Ok(_payload)
+        Ok(payload)
     }
 
-    fn extract_string(_str: &str, _find: &str) -> Result<String, ContractError> {
-        let start_index = match &_str.find(_find) {
-            Some(index) => index + _find.len(),
-            None => {
-                return Err(ContractError::InvalidToken);
-            }
-        };
-        let end_index = Self::get_colon_index(&_str[start_index..])?;
+    fn deserialize_header(h: &str) -> Result<Header, ContractError> {
+        let decoded_header = Self::convert_from_base64(h, ContractError::InvalidToken)?;
 
-        Ok(_str[start_index..end_index.add(start_index)].to_string())
+        let utf8_str = String::from_utf8_lossy(&decoded_header).to_string();
+
+        let header: Header =
+            serde_json_wasm::from_str(&utf8_str).map_err(|_| ContractError::InvalidToken)?;
+
+        Ok(header)
     }
 
-    fn extract_aud(_str: &str) -> Result<String, ContractError> {
-        let _find = "\"aud\":";
-        let start_index = match &_str.find(_find) {
-            Some(index) => index + _find.len(),
-            None => {
-                return Err(ContractError::InvalidToken);
-            }
-        };
-        let end_index = _str.len() - 1;
-        Ok(_str[start_index..end_index].to_string())
+    pub fn convert_from_base64(input: &str, err: ContractError) -> Result<Vec<u8>, ContractError> {
+        let output = URL_SAFE_NO_PAD.decode(input).map_err(|_| err)?;
+        Ok(output)
     }
-
-    fn get_colon_index(_str: &str) -> Result<usize, ContractError> {
-        match _str.find('"') {
-            Some(index) => Ok(index),
-            None => Err(ContractError::InvalidToken),
-        }
-    }
-}
-
-pub fn verify(
-    //current_time: &Timestamp,
-    //tx_hash: &Vec<u8>,
-    sig_bytes: &[u8],
-    aud: &str,
-    // sub: &str,
-) -> Result<String, ContractError> {
-    if !AUD_KEY_MAP.contains_key(aud) {
-        return Err(InvalidJWTAud);
-    }
-
-    let key = match AUD_KEY_MAP.get(aud) {
-        None => return Err(InvalidJWTAud),
-        Some(k) => *k,
-    };
-
-    // prepare the components of the token for verification
-    let mut components = sig_bytes.split(|&b| b == b'.');
-    let header_bytes = components.next().ok_or(InvalidToken)?; // ignore the header, it is not currently used
-    let payload_bytes = components.next().ok_or(InvalidToken)?;
-    let digest_bytes = [header_bytes, &[b'.'], payload_bytes].concat();
-    let signature_bytes = components.next().ok_or(InvalidToken)?;
-
-    let signature = URL_SAFE_NO_PAD
-        .decode(signature_bytes)
-        .map_err(|_| ContractError::InvalidToken)?;
-
-    // retrieve and rebuild the pubkey
-    let mut key_split = key.split(';');
-    let modulus = key_split.next().ok_or(InvalidJWTAud)?;
-    let mod_bytes = URL_SAFE_NO_PAD
-        .decode(modulus)
-        .map_err(|_| ContractError::InvalidToken)?;
-    let exponent = key_split.next().ok_or(InvalidJWTAud)?;
-    let exp_bytes = URL_SAFE_NO_PAD
-        .decode(exponent)
-        .map_err(|_| ContractError::InvalidToken)?;
-    let pubkey = RsaPublicKey::new(
-        BigUint::from_bytes_be(mod_bytes.as_slice()),
-        BigUint::from_bytes_be(exp_bytes.as_slice()),
-    )
-    .map_err(|_| ContractError::InvalidToken)?;
-
-    // hash the message body before verification
-    let mut hasher = Sha256::new();
-    hasher.update(digest_bytes);
-    let digest = hasher.finalize().as_slice().to_vec();
-
-    // verify the signature
-    let scheme = Pkcs1v15Sign::new::<Sha256>();
-    scheme
-        .verify(&pubkey, digest.as_slice(), signature.as_slice())
-        .map_err(|_| ContractError::InvalidToken)?;
-
-    // at this point, we have verified that the token is legitimately signed.
-    // now we perform logic checks on the body
-
-    extract_email(&payload_bytes)
-}
-
-fn extract_email(payload_bytes: &[u8]) -> Result<String, ContractError> {
-    let decoded_payload = URL_SAFE_NO_PAD
-        .decode(payload_bytes)
-        .map_err(|_| ContractError::InvalidToken)?;
-
-    let st = String::from_utf8_lossy(&decoded_payload);
-
-    let start_index = match st.find("\"email_address\":\"") {
-        Some(index) => index + "\"email_address\":\"".len(),
-        None => {
-            return Err(ContractError::InvalidToken);
-        }
-    };
-
-    let end_index = match st[start_index..].find('"') {
-        Some(index) => index + start_index,
-        None => {
-            return Err(ContractError::InvalidToken);
-        }
-    };
-
-    let email_address = &st[start_index..end_index];
-
-    Ok(email_address.to_owned())
 }

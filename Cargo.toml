@@ -1,7 +1,7 @@
 [package]
-name = "haypay"
-version = "0.1.1"
-authors = ["Saeed <github.com/omni001s>", "Sam <github.com/meisamtaher>"]
+name = "heypay"
+version = "0.1.2"
+authors = ["Max <github.com/0xmaxyz>", "Sam <github.com/meisamtaher>"]
 edition = "2021"
 
 [lib]
@@ -50,6 +50,7 @@ thiserror = { version = "1.0.49" }
 getrandom = { version = "0.2.10", features = ["custom"] }
 email_address = "0.2.4"
 semver = "1.0.21"
+serde-json-wasm = "1.0.1"
 
 [dev-dependencies]
 cw-multi-test = "0.17.0"
