@@ -72,7 +72,11 @@ const Send = () => {
       console.log(SendRes)
       setExecuteResult(SendRes);
       console.log(executeResult);
-      sendNotification({msg:"Hey!! Token Sent successfully",variant:"success"});
+      if(SendRes)
+        sendNotification({msg:"Hey!! Token Sent successfully",variant:"success"});
+      else{
+        sendNotification({msg:"Unknown Error occured",variant:"error"});
+      }
       
     } catch (error) {
       // eslint-disable-next-line no-console -- No UI exists yet to display errors
@@ -139,7 +143,7 @@ const Send = () => {
             </div>
             <div className="flex flex-row gap-5 items-center">
               <a className="w-20 font-bold">Description</a>
-              <input className="bg-[#81D6E3] focus:bg-black px-2 border-[0.2rem] rounded-lg h-12 w-64 border-[#29A8BB] "
+              <input className="bg-[#81D6E3] px-2 border-[0.2rem] rounded-lg h-12 w-64 border-[#29A8BB] "
                         type="string"
                         id='details'
                         name= 'details'

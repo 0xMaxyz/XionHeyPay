@@ -118,20 +118,20 @@ const SideBar = () => {
         <div className="bg-slate-600 h-0.5  m-5"></div>
         
         <div className="pl-5 pr-5 w-full justify-center items-center">
-            {(claimables==undefined)&& <CircularProgress></CircularProgress>}
+            {(claimables==undefined && account && client && email)&& <CircularProgress></CircularProgress>}
             {(claimables && claimables.length==0)&&<NothingMessage></NothingMessage>}
             {(claimables && claimables.length>0)&&<div>
-            <ClaimMessage></ClaimMessage>
-            <div className='flex flex-col w-full pt-3  gap-2 '>
-                {claimables?.map((x,index) =>(<ClaimCard key={index} claimObject={x}></ClaimCard>))}
-                <div className="bg-slate-600 h-0.5  m-2"></div>
-                <div className="flex flex-row pl-4 pr-4">     
-                    <a className="flex flex-row w-40">Total Value: </a>
-                    <div className="flex flex-row-reverse w-full ">
-                        <a className="font-bold "> {claimables?.reduce((accumulator, x)=>{return accumulator+(x.amount*x.price)},0)}$</a>
-                    </div>
-                </div>
-            </div>
+              <ClaimMessage></ClaimMessage>
+              <div className='flex flex-col w-full pt-3  gap-2 '>
+                  {claimables?.map((x,index) =>(<ClaimCard key={index} claimObject={x}></ClaimCard>))}
+                  <div className="bg-slate-600 h-0.5  m-2"></div>
+                  <div className="flex flex-row pl-4 pr-4">     
+                      <a className="flex flex-row w-40">Total Value: </a>
+                      <div className="flex flex-row-reverse w-full ">
+                          <a className="font-bold "> {claimables?.reduce((accumulator, x)=>{return accumulator+(x.amount*x.price)},0)}$</a>
+                      </div>
+                  </div>
+              </div>
             <form onSubmit={ClaimTokens} className='flex flex-row-reverse h-20 w-full pt-3 pb-3'>
                 {!loading?<button disabled={loading|| !claimables || claimables.length<1} className="w-[150px] bg-sky-600 hover:bg-sky-500 disabled:bg-gray-500 disabled:text-slate-700  border-gray-500 text-white  rounded h-full text-xl font-bold" >Claim</button>:<CircularProgress></CircularProgress>}
             </form></div>}

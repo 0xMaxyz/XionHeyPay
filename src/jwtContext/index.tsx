@@ -22,8 +22,7 @@ export const UserContext = createContext<UserContextProps>(
   {} as UserContextProps,
 );
 export const useUserContext = () => {
-  const context = useContext(UserContext)
-  return context
+  return useContext(UserContext);
 }
 
 export function UserContextProvider({

@@ -17,7 +17,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         
         config={{
             contracts: verifiedContracts,
-            dashboardUrl:"http://localhost:3000"
+            dashboardUrl:"http://localhost:3000",
+            rpcUrl:"https://xion-testnet-rpc.polkachu.com"
         }}
         >
             <UserContextProvider>

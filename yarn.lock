@@ -82,12 +82,12 @@
     "@babel/helper-validator-identifier" "^7.22.20"
     to-fast-properties "^2.0.0"
 
-"@burnt-labs/abstraxion@^1.0.0-alpha.24":
-  version "1.0.0-alpha.26"
-  resolved "https://registry.yarnpkg.com/@burnt-labs/abstraxion/-/abstraxion-1.0.0-alpha.26.tgz#23f8136e70bcd708d6cdecdcf114523b9b1a828c"
-  integrity sha512-uCCf6D1Wwi1L/S1wTc/ZyrZYuLeBV7hlOvbW7Cnr531sYG8Gir3PVJqNpZ686Ahb7e9TtBpQIHXQ+AmbLhLv1g==
+"@burnt-labs/abstraxion@^1.0.0-alpha.28":
+  version "1.0.0-alpha.28"
+  resolved "https://registry.yarnpkg.com/@burnt-labs/abstraxion/-/abstraxion-1.0.0-alpha.28.tgz#352db68460ee5cdeab20c9ca1cac6cae2789ffd5"
+  integrity sha512-viCSrBOYy7FvxUBDytm3A150CsktpuzAZn1w9jLyfnOjZTOXC+sCA7mbjCkERuUO880bNECvc3Kxch18RWc2NA==
   dependencies:
-    "@burnt-labs/constants" "0.0.1-alpha.3"
+    "@burnt-labs/constants" "0.1.0-alpha.4"
     "@burnt-labs/signers" "0.1.0-alpha.5"
     "@burnt-labs/ui" "0.1.0-alpha.5"
     "@cosmjs/cosmwasm-stargate" "^0.31.3"
@@ -99,10 +99,10 @@
     graz "^0.0.51"
     jose "^5.1.3"
 
-"@burnt-labs/constants@0.0.1-alpha.3":
-  version "0.0.1-alpha.3"
-  resolved "https://registry.yarnpkg.com/@burnt-labs/constants/-/constants-0.0.1-alpha.3.tgz#c15cbe7a2d676d06094906009fc2a0353425f5f2"
-  integrity sha512-70lYZHbhYDnxumdzJPbJX9RvZighX40HFw3UJ7dIzTwgStlam52AhwXKPuoi26MKD+WakX44h+aRU56W0/1AbA==
+"@burnt-labs/constants@0.1.0-alpha.4":
+  version "0.1.0-alpha.4"
+  resolved "https://registry.yarnpkg.com/@burnt-labs/constants/-/constants-0.1.0-alpha.4.tgz#20c307af543ceeb0443ddf9a5251a2eadc75e29f"
+  integrity sha512-CYw1IUxMLV21PYQxXibbNS410u/weYi6L+CG4kiUVoNkjks9VVkMglFySz8DjgXJ5sajbjJWMb5KLVfxUt1kMQ==
 
 "@burnt-labs/signers@0.1.0-alpha.5":
   version "0.1.0-alpha.5"
