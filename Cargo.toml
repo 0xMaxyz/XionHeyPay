@@ -1,6 +1,6 @@
 [package]
 name = "heypay"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Max <github.com/0xmaxyz>", "Sam <github.com/meisamtaher>"]
 edition = "2021"
 

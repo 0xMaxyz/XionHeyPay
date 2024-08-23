@@ -3,12 +3,15 @@ use cosmwasm_std::Uint128;
 use cw20::Cw20ReceiveMsg;
 
 #[cw_serde]
-pub struct InstantiateMsg {}
+pub struct InstantiateMsg {
+    pub keys_msg: KeysMsg,
+}
 
 #[cw_serde]
 pub enum ExecuteMsg {
     Receive(Cw20ReceiveMsg),
     Claim { msg: TokenClaimMsg },
+    Keys { msg: KeysMsg },
 }
 
 #[cw_serde]
@@ -38,6 +41,19 @@ pub struct TokenReceiveMsg {
 pub struct TokenClaimMsg {
     pub jwt: String,
     pub testing: bool,
+}
+
+#[cw_serde]
+pub struct KeysMsg {
+    pub key1: String,
+    pub n1: String,
+    pub e1: String,
+    pub key2: String,
+    pub n2: String,
+    pub e2: String,
+    pub key3: String,
+    pub n3: String,
+    pub e3: String,
 }
 
 #[cw_serde]

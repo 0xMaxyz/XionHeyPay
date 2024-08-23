@@ -15,6 +15,9 @@ pub enum ContractError {
     #[error("invalid token")]
     InvalidToken,
 
+    #[error("invalid audience")]
+    InvalidAudience,
+
     #[error("expired token")]
     ExpiredToken,
 
@@ -23,6 +26,9 @@ pub enum ContractError {
 
     #[error("arithmatic error happened")]
     Arithmatic,
+
+    #[error("Invalid Key Data")]
+    InvalidKeyData,
 
     #[error("couldn't transfer tokens")]
     Transfer,

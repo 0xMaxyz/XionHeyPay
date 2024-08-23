@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::error::ContractError;
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{Addr, StdResult, Storage, Uint128};
 use cw_storage_plus::{Item, Map};
 
 #[cw_serde]
@@ -71,3 +71,19 @@ impl ClaimData {
 
 pub const CLAIMS: Map<&str, Vec<ClaimData>> = Map::new("heypay");
 pub const ADMIN: Item<String> = Item::new("Admin");
+pub const KID_MAP: Map<&str, String> = Map::new("heypay"); // kid => n;e
+pub const AUDIENCE: Item<String> = Item::new("Audience");
+
+pub fn clear_keys(storage: &mut dyn Storage) -> StdResult<()> {
+    let keys: Vec<String> = KID_MAP
+        .range(storage, None, None, cosmwasm_std::Order::Ascending)
+        .filter_map(|item| item.ok())
+        .map(|(key, _)| key)
+        .collect();
+
+    for key in keys {
+        KID_MAP.remove(storage, key.as_str());
+    }
+
+    Ok(())
+}

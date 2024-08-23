@@ -21,6 +21,7 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(_deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     ADMIN.save(_deps.storage, &_info.sender.to_string())?;
+    execute::keys(_deps, _info, _env, _msg.keys_msg)?;
 
     Ok(Response::default()
         .add_attribute(CONTRACT_NAME, CONTRACT_VERSION)
@@ -37,6 +38,7 @@ pub fn execute(
     match _msg {
         ExecuteMsg::Receive(msg) => execute::execute_receive(_deps, _info, msg),
         ExecuteMsg::Claim { msg } => execute::claim(_deps, _info, _env, msg),
+        ExecuteMsg::Keys { msg } => execute::keys(_deps, _info, _env, msg),
     }
 }
 
@@ -86,8 +88,8 @@ mod execute {
     use std::str::FromStr;
 
     use crate::{
-        msg::{TokenClaimMsg, TokenReceiveMsg},
-        state::{ClaimData, CLAIMS},
+        msg::{KeysMsg, TokenClaimMsg, TokenReceiveMsg},
+        state::{clear_keys, ClaimData, CLAIMS, KID_MAP},
         ContractError,
     };
 
@@ -136,7 +138,12 @@ mod execute {
         _msg: TokenClaimMsg,
     ) -> Result<Response, ContractError> {
         // verify token and get email
-        match crate::jwt::Token::verify(&_msg.jwt, _env.block.time.seconds(), _msg.testing) {
+        match crate::jwt::Token::verify(
+            &_msg.jwt,
+            _env.block.time.seconds(),
+            _msg.testing,
+            &*_deps.storage,
+        ) {
             Ok(payload) => {
                 // check if sender is equal to address in token
                 let addr_in_jwt = _deps.api.addr_validate(&payload.nonce)?;
@@ -197,6 +204,46 @@ mod execute {
                 }
             }
             Err(er) => Err(er),
+        }
+    }
+    pub fn keys(
+        _deps: DepsMut,
+        _info: MessageInfo,
+        _env: Env,
+        _msg: KeysMsg,
+    ) -> Result<Response, ContractError> {
+        let storage = _deps.storage;
+
+        if _msg.key1.is_empty()
+            || _msg.n1.is_empty()
+            || _msg.e1.is_empty()
+            || _msg.key2.is_empty()
+            || _msg.n2.is_empty()
+            || _msg.e2.is_empty()
+        {
+            return Err(ContractError::InvalidKeyData);
+        }
+
+        clear_keys(storage)?;
+
+        let value1 = format!("{};{}", _msg.n1, _msg.e1);
+        let value2 = format!("{};{}", _msg.n2, _msg.e2);
+        KID_MAP.save(storage, &_msg.key2, &value2)?;
+        KID_MAP.save(storage, &_msg.key1, &value1)?;
+
+        if !_msg.key3.is_empty() && !_msg.n3.is_empty() && !_msg.e3.is_empty() {
+            let value3 = format!("{};{}", _msg.n3, _msg.e3);
+            KID_MAP.save(storage, &_msg.key3, &value3)?;
+            Ok(Response::new()
+                .add_attribute("method", "keys")
+                .add_attribute("key1", _msg.key1)
+                .add_attribute("key2", _msg.key2)
+                .add_attribute("key3", _msg.key3))
+        } else {
+            Ok(Response::new()
+                .add_attribute("method", "keys")
+                .add_attribute("key1", _msg.key1)
+                .add_attribute("key2", _msg.key2))
         }
     }
 }
