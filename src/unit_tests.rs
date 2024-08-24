@@ -2,7 +2,7 @@
 
 use crate::{
     contract::{self, instantiate},
-    msg::{self, InstantiateMsg, QueryClaimResponse, QueryMsg},
+    msg::{self, InstantiateMsg, KeysMsg, QueryClaimResponse, QueryMsg},
 };
 use cosmwasm_std::{
     from_json,
@@ -11,16 +11,29 @@ use cosmwasm_std::{
 };
 use cw20::Cw20ReceiveMsg;
 
-pub const SESSION_JWT:&str="eyJhbGciOiJSUzI1NiIsImtpZCI6ImFkZjVlNzEwZWRmZWJlY2JlZmE5YTYxNDk1NjU0ZDAzYzBiOGVkZjgiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyMjIwMzc4MzcxNTQtcG5oNXJkcjhkOWh2Zmo5aW9vcmU2YW1iMGdxczRiajkuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyMjIwMzc4MzcxNTQtcG5oNXJkcjhkOWh2Zmo5aW9vcmU2YW1iMGdxczRiajkuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDE5ODkxODYwMDE4MjUxMDI1NTAiLCJlbWFpbCI6IjB4bWF4eXpAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5vbmNlIjoiYWRkcmVzczEiLCJuYmYiOjE3MTE1MzU2MzIsIm5hbWUiOiJNYXgiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSlA4RFVmbnhKbVo0NUlDd2JCR2h4VlByMTFmdWFGdnMyRVRNRWh6dmNQUnc9czk2LWMiLCJnaXZlbl9uYW1lIjoiTWF4IiwiaWF0IjoxNzExNTM1OTMyLCJleHAiOjE3MTE1Mzk1MzIsImp0aSI6IjllYzg1NGQwNzQ1NTdmZjEzZTgwMjRlZDEzYTlmY2ViNmI3YTI3OTMifQ.wUXRUSEgOytmdalPHzZtqcUNhfYkvEC1KpSQK5OMre5qVT6-sahR7VWLIkTKz7gs6SNTFmecM1Kceis3CSjKKLxESZU2RrDZPlE7lUvZFy7DSc5KfaE46jOj7hYnsheUmG2xxVqP2ismzfeQwKN00qf8BrmuF8-DEP4TwWUFZ6LfNBfHmjxnIdzx5rt-px_GHvSgs8P_SG1zpCrVov2_eDzcLd1yok3fHKv6LQQGsl91tcZwnJukb1_XIIQy7HYFpdj8ixrVRwAOMrYsT9n_U3BZDfe2wjoLjEwTSwBQuJdcYu2ie-KbReVO6lGtEmIA7eZzmIgNiBZgoWSrW89ULA";
 pub const AUDIENCE: &str =
-    "222037837154-pnh5rdr8d9hvfj9ioore6amb0gqs4bj9.apps.googleusercontent.com";
-pub const EMAIL: &str = "0xmaxyz@gmail.com";
+    "965798652522-bn240k47q576vhqon2tuk0feg20bbt0u.apps.googleusercontent.com";
+pub const EMAIL: &str = "meisamtaher71@gmail.com";
+pub const SESSION_JWT: &str = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImE0OTM5MWJmNTJiNThjMWQ1NjAyNTVjMmYyYTA0ZTU5ZTIyYTdiNjUiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI5NjU3OTg2NTI1MjItYm4yNDBrNDdxNTc2dmhxb24ydHVrMGZlZzIwYmJ0MHUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI5NjU3OTg2NTI1MjItYm4yNDBrNDdxNTc2dmhxb24ydHVrMGZlZzIwYmJ0MHUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTM1NTUwMjYxMjgxMDczODk5MTYiLCJlbWFpbCI6Im1laXNhbXRhaGVyNzFAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5vbmNlIjoieGlvbjE1YTV3czJ5NjM2a2YydnM3d2V0czQ0YXk3OGRzcjV6cTMzOTllcWZ2NG5rbmt3N2phdmRzNnA3Y2NjIiwibmJmIjoxNzI0MzY2NzA3LCJuYW1lIjoiTWVpc2FtIFRhaGVyIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FDZzhvY0o5QzBLeTRYR2JWejEySk1FRFpBRk9oS2lZeEh5SnlIeUdrU2VIRHVwSkFhZHB1NEJWPXM5Ni1jIiwiZ2l2ZW5fbmFtZSI6Ik1laXNhbSIsImZhbWlseV9uYW1lIjoiVGFoZXIiLCJpYXQiOjE3MjQzNjcwMDcsImV4cCI6MTcyNDM3MDYwNywianRpIjoiMjRlNjU5OTc1M2Y0ZDAxZTA3YTZjNTZmODJiMGY2Y2U1YWEzNDY5MCJ9.P4kKcgI3zD_X-eA5HekOsbHH-MH_7F5LZ8oU_b14NEXB6liSDiVIABwiNIGYBXQdjsnoNycu3Su6FwxGOZaeJ7XPNx-C-4KCpJnBosXV2Reu49dA3wz5bo7N_xpqn154xoRHmC2Ymx3jKXKq-nYVqmQX0Ug4uVFqGcumhpGfYg6PfY3LT3z5F2hXGwkWJ_1DyMKkp_MwRzlwoLCt-sHov6qV6WqzyakHq3qGxUCUCu0JWFlRThmWQ7q2C4pk0P6yBJKN3URtvgq_I-5xOtxt097aZCbVc0S29jCvyerbV9ZFi2hj8dgyFj1hQm-m6TQiHzGEEwUMly80n_iyVidVzQ";
+pub const NOUNCE: &str = "xion15a5ws2y636kf2vs7wets44ay78dsr5zq3399eqfv4nknkw7javds6p7ccc";
 
 #[test]
 fn test_instantiate() {
     let mut deps = mock_dependencies();
 
-    let instantiate_msg = InstantiateMsg {};
+    let instantiate_msg = InstantiateMsg {
+        keys_msg: KeysMsg {
+            key1: "d2d444cf8c5e3ae8386d66a13a316976aa369991".to_string(),
+            n1: "onV5tzUbqyPfkM6MwUqCtrqun9x20hEUbIUlmAYYuPuMhsaNHJqs1AVzRt2TzaNjmPVddEbU7VMDmeFWUt7vgDi7Xu0leevuIN4VSPbAMGBa0oj9Qopqkn9ePO_7DvIN13ktHgfQqatNBu6uXH6zkUl3VtXnubXrUhx7uyF22dARDc1-pJoj2NnsvgxDRElPMyDkU-siVv3c6cgIEwLEZZPWOcwplPTUB4qeTK6prrPBGQshuE1PWK2ZrYpIvXfzHyEbkGdPnrhcxgCzbKBUFvr8n_sfSurLRoDBLjkURKmgB8T8iRzLyXsCu9D3Hw61LKuex1aeSQLdwOFLuUEBdw".to_string(),
+            e1: "AQAB".to_string(),
+            key2: "a49391bf52b58c1d560255c2f2a04e59e22a7b65".to_string(),
+            n2: "v7hTj49pNGYjxKbgMx_iDyjeErhfJFepMl306IV_TW5T_CEGE4lWFfBe9w0cwpi5KD6XlC1GO1AsrtzcYF29wJ283GNBZRkbl8iTe-LQYdjQsBtf_1fLIVt6LR7H2U1RPqa3pY16Kq6i6yC2osVg6tD7ApBCGw1WKe8uU3cm28biJzuV4gv6PzcbOdErd-hb4Cv6n2SoMPYlBfT4pWee75poQh8DYoQ1KJwowz3U1MaxOBMP260hmDK-QK0q4LYabCQiBNsz4FWWcaAAFxZFbiqGY5Gdu18uOkpMbdAN5FoZ_6nMDMSTmlf0CHv7gZe_cL38kZvTaynkWwDxqsW_Xw".to_string(),
+            e2: "AQAB".to_string(),
+            key3: "".to_string(),
+            n3: "".to_string(),
+            e3: "".to_string(),
+        },
+    };
     let info = mock_info("sender", &[]);
 
     let result = instantiate(deps.as_mut(), mock_env(), info, instantiate_msg).unwrap();
@@ -110,7 +123,7 @@ fn test_claim_by_email() {
         AUDIENCE.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
-        mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
+        mock_info(NOUNCE, &[]),
         1,
     );
     // email1 shall have no more claims
@@ -147,7 +160,7 @@ fn test_aggregate_multiple_receives() {
         AUDIENCE.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
-        mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
+        mock_info(NOUNCE, &[]),
         4,
     );
 }
@@ -191,7 +204,7 @@ fn test_claim_multi_token() {
         AUDIENCE.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
-        mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
+        mock_info(NOUNCE, &[]),
         8,
     );
 }
@@ -223,7 +236,7 @@ fn test_claim_only_once() {
         AUDIENCE.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
-        mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
+        mock_info(NOUNCE, &[]),
         1,
     );
 
@@ -232,7 +245,7 @@ fn test_claim_only_once() {
         AUDIENCE.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
-        mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
+        mock_info(NOUNCE, &[]),
         1,
     );
 }
@@ -289,7 +302,7 @@ fn test_empty_memo() {
         AUDIENCE.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
-        mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
+        mock_info(NOUNCE, &[]),
         1,
     );
 }
@@ -314,7 +327,7 @@ fn test_panic_long_memo() {
         AUDIENCE.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
-        mock_info("address1", &[]), // for email1 -> address1 and for email2 -> address2
+        mock_info(NOUNCE, &[]),
         1,
     );
 }

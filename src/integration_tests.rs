@@ -1,8 +1,8 @@
 #![cfg(test)]
 
 use crate::{
-    msg::{QueryClaimResponse, QueryMsg, TokenReceiveMsg},
-    unit_tests::EMAIL,
+    msg::{ExecuteMsg, KeysMsg, QueryClaimResponse, QueryMsg, TokenClaimMsg, TokenReceiveMsg},
+    unit_tests::{EMAIL, NOUNCE, SESSION_JWT},
 };
 use cosmwasm_std::{coins, to_json_binary, Addr, Empty, Uint128};
 use cw20::{Cw20Coin, Cw20Contract, Cw20ExecuteMsg};
@@ -12,7 +12,7 @@ use cw_multi_test::{App, Contract, ContractWrapper, Executor};
 #[test]
 fn test_receive() {
     // setup owner with founds and App
-    let owner = Addr::unchecked("owner");
+    let owner = Addr::unchecked(NOUNCE);
     let init_balance = coins(1000, "cw20");
 
     let mut router = App::new(|router, _, storage| {
@@ -55,9 +55,9 @@ fn test_receive() {
                     key2: "a49391bf52b58c1d560255c2f2a04e59e22a7b65".to_string(),
                     n2: "v7hTj49pNGYjxKbgMx_iDyjeErhfJFepMl306IV_TW5T_CEGE4lWFfBe9w0cwpi5KD6XlC1GO1AsrtzcYF29wJ283GNBZRkbl8iTe-LQYdjQsBtf_1fLIVt6LR7H2U1RPqa3pY16Kq6i6yC2osVg6tD7ApBCGw1WKe8uU3cm28biJzuV4gv6PzcbOdErd-hb4Cv6n2SoMPYlBfT4pWee75poQh8DYoQ1KJwowz3U1MaxOBMP260hmDK-QK0q4LYabCQiBNsz4FWWcaAAFxZFbiqGY5Gdu18uOkpMbdAN5FoZ_6nMDMSTmlf0CHv7gZe_cL38kZvTaynkWwDxqsW_Xw".to_string(),
                     e2: "AQAB".to_string(),
-                    key3: "4529c409f77a106fb67ee1a85d168fd2cfb7c0b7".to_string(),
-                    n3: "1crrYmsX8OVzrN9BTDD4RlVJDqSQIEbRby9ELqTmCpW1Qtt7y-pdmLPqlYG1ND5mprkTA83S7g_dcsxuV4wxK4_Vv5a8IBn86HfAX4VfCCOzqBYgACN6hlaffzPIWL1QA8yZ4w-D0fnN3xC5ULhtmtBG23qi__4yEo_FIY6irvbHrpRNI_-vjxFokm2X3ENP2ZOwgNhDIthwJo8l1KNbZa1riAJVcF86zWILQTy756hh8eH1Kt05wsGB3DeGPNV55zYv6sB2bzxARsVYAtCRJ8c28FYWwU8dCRJ70eJEmY4aKFOBO5g4fwYJlvMm9Le7qgAUH5-7wO52BayqXmqAOQ".to_string(),
-                    e3: "AQAB".to_string(),
+                    key3: "".to_string(),
+                    n3: "".to_string(),
+                    e3: "".to_string(),
                 },
             },
             &[],
@@ -102,9 +102,23 @@ fn test_receive() {
         email: EMAIL.to_owned(),
     };
 
-    let query_resp: QueryClaimResponse =
-        router.wrap().query_wasm_smart(heypay_addr, &_qmsg).unwrap();
-    _ = &query_resp.claims;
+    let query_resp: QueryClaimResponse = router
+        .wrap()
+        .query_wasm_smart(heypay_addr.clone(), &_qmsg)
+        .unwrap();
+    assert!(!query_resp.claims.is_empty());
+
+    // claim the token
+    let claimMsg = ExecuteMsg::Claim {
+        msg: TokenClaimMsg {
+            jwt: SESSION_JWT.to_owned(),
+            testing: true,
+        },
+    };
+    let response = router
+        .execute_contract(owner.clone(), heypay_addr.clone(), &claimMsg, &[])
+        .unwrap();
+    let ccc = 2 as i32;
 }
 
 //
