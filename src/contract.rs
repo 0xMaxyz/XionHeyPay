@@ -81,7 +81,7 @@ fn from_semver(err: semver::Error) -> ContractError {
 
 mod execute {
     use cosmwasm_std::{
-        from_json, to_json_binary, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response,
+        from_json, to_json_binary, Addr, CosmosMsg, DepsMut, Env, Event, MessageInfo, Response,
     };
     use cw20::Cw20ReceiveMsg;
 
@@ -146,7 +146,7 @@ mod execute {
         ) {
             Ok(payload) => {
                 // check if sender is equal to address in token
-                let addr_in_jwt = _deps.api.addr_validate(&payload.nonce)?;
+                let addr_in_jwt: Addr = _deps.api.addr_validate(&payload.nonce)?;
                 if addr_in_jwt != _info.sender {
                     return Err(ContractError::Unauthorized {});
                 }

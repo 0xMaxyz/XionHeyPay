@@ -3,16 +3,16 @@
 use crate::{
     contract::{self, instantiate},
     msg::{self, InstantiateMsg, KeysMsg, QueryClaimResponse, QueryMsg},
+    state::{AUDIENCE, KID_MAP},
 };
 use cosmwasm_std::{
     from_json,
     testing::{mock_dependencies, mock_env, mock_info},
-    to_json_binary, Deps, DepsMut, MessageInfo, Uint128,
+    to_json_binary, Deps, DepsMut, MessageInfo, Storage, Uint128,
 };
 use cw20::Cw20ReceiveMsg;
 
-pub const AUDIENCE: &str =
-    "965798652522-bn240k47q576vhqon2tuk0feg20bbt0u.apps.googleusercontent.com";
+pub const AUD: &str = "965798652522-bn240k47q576vhqon2tuk0feg20bbt0u.apps.googleusercontent.com";
 pub const EMAIL: &str = "meisamtaher71@gmail.com";
 pub const SESSION_JWT: &str = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImE0OTM5MWJmNTJiNThjMWQ1NjAyNTVjMmYyYTA0ZTU5ZTIyYTdiNjUiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI5NjU3OTg2NTI1MjItYm4yNDBrNDdxNTc2dmhxb24ydHVrMGZlZzIwYmJ0MHUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI5NjU3OTg2NTI1MjItYm4yNDBrNDdxNTc2dmhxb24ydHVrMGZlZzIwYmJ0MHUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTM1NTUwMjYxMjgxMDczODk5MTYiLCJlbWFpbCI6Im1laXNhbXRhaGVyNzFAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5vbmNlIjoieGlvbjE1YTV3czJ5NjM2a2YydnM3d2V0czQ0YXk3OGRzcjV6cTMzOTllcWZ2NG5rbmt3N2phdmRzNnA3Y2NjIiwibmJmIjoxNzI0MzY2NzA3LCJuYW1lIjoiTWVpc2FtIFRhaGVyIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FDZzhvY0o5QzBLeTRYR2JWejEySk1FRFpBRk9oS2lZeEh5SnlIeUdrU2VIRHVwSkFhZHB1NEJWPXM5Ni1jIiwiZ2l2ZW5fbmFtZSI6Ik1laXNhbSIsImZhbWlseV9uYW1lIjoiVGFoZXIiLCJpYXQiOjE3MjQzNjcwMDcsImV4cCI6MTcyNDM3MDYwNywianRpIjoiMjRlNjU5OTc1M2Y0ZDAxZTA3YTZjNTZmODJiMGY2Y2U1YWEzNDY5MCJ9.P4kKcgI3zD_X-eA5HekOsbHH-MH_7F5LZ8oU_b14NEXB6liSDiVIABwiNIGYBXQdjsnoNycu3Su6FwxGOZaeJ7XPNx-C-4KCpJnBosXV2Reu49dA3wz5bo7N_xpqn154xoRHmC2Ymx3jKXKq-nYVqmQX0Ug4uVFqGcumhpGfYg6PfY3LT3z5F2hXGwkWJ_1DyMKkp_MwRzlwoLCt-sHov6qV6WqzyakHq3qGxUCUCu0JWFlRThmWQ7q2C4pk0P6yBJKN3URtvgq_I-5xOtxt097aZCbVc0S29jCvyerbV9ZFi2hj8dgyFj1hQm-m6TQiHzGEEwUMly80n_iyVidVzQ";
 pub const NOUNCE: &str = "xion15a5ws2y636kf2vs7wets44ay78dsr5zq3399eqfv4nknkw7javds6p7ccc";
@@ -120,7 +120,7 @@ fn test_claim_by_email() {
 
     // claim the tokens by email
     claim_by_email(
-        AUDIENCE.to_string(),
+        AUD.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
         mock_info(NOUNCE, &[]),
@@ -157,7 +157,7 @@ fn test_aggregate_multiple_receives() {
     );
     // Claim
     claim_by_email(
-        AUDIENCE.to_string(),
+        AUD.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
         mock_info(NOUNCE, &[]),
@@ -201,7 +201,7 @@ fn test_claim_multi_token() {
     );
     // Claim
     claim_by_email(
-        AUDIENCE.to_string(),
+        AUD.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
         mock_info(NOUNCE, &[]),
@@ -233,7 +233,7 @@ fn test_claim_only_once() {
 
     // claim the tokens by email
     claim_by_email(
-        AUDIENCE.to_string(),
+        AUD.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
         mock_info(NOUNCE, &[]),
@@ -242,7 +242,7 @@ fn test_claim_only_once() {
 
     // panics
     claim_by_email(
-        AUDIENCE.to_string(),
+        AUD.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
         mock_info(NOUNCE, &[]),
@@ -274,7 +274,7 @@ fn test_claim_panicks_with_wrong_sender() {
 
     // should panic
     claim_by_email(
-        AUDIENCE.to_string(),
+        AUD.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
         // another sender tries to claim tokens with valid jwt, but jwt is signed for address1
@@ -299,7 +299,7 @@ fn test_empty_memo() {
     );
 
     claim_by_email(
-        AUDIENCE.to_string(),
+        AUD.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
         mock_info(NOUNCE, &[]),
@@ -324,7 +324,7 @@ fn test_panic_long_memo() {
     );
 
     claim_by_email(
-        AUDIENCE.to_string(),
+        AUD.to_string(),
         SESSION_JWT.to_string(),
         dep.as_mut(),
         mock_info(NOUNCE, &[]),
@@ -346,6 +346,8 @@ fn claim_by_email(_aud: String, _jwt: String, _dep: DepsMut, _info: MessageInfo,
     let claim_msg = crate::msg::ExecuteMsg::Claim {
         msg: token_claim_msg,
     };
+    // mock keys
+    mock_keys(_dep.storage);
     match crate::contract::execute(_dep, mock_env(), _info.clone(), claim_msg) {
         Ok(resp) => {
             assert_eq!(
@@ -387,6 +389,12 @@ fn send_token(
             assert!(false);
         }
     };
+}
+
+fn mock_keys(s: &mut dyn Storage) {
+    KID_MAP.save(s, "d2d444cf8c5e3ae8386d66a13a316976aa369991", &"onV5tzUbqyPfkM6MwUqCtrqun9x20hEUbIUlmAYYuPuMhsaNHJqs1AVzRt2TzaNjmPVddEbU7VMDmeFWUt7vgDi7Xu0leevuIN4VSPbAMGBa0oj9Qopqkn9ePO_7DvIN13ktHgfQqatNBu6uXH6zkUl3VtXnubXrUhx7uyF22dARDc1-pJoj2NnsvgxDRElPMyDkU-siVv3c6cgIEwLEZZPWOcwplPTUB4qeTK6prrPBGQshuE1PWK2ZrYpIvXfzHyEbkGdPnrhcxgCzbKBUFvr8n_sfSurLRoDBLjkURKmgB8T8iRzLyXsCu9D3Hw61LKuex1aeSQLdwOFLuUEBdw;AQAB".to_string()).unwrap();
+    KID_MAP.save(s, "a49391bf52b58c1d560255c2f2a04e59e22a7b65", &"v7hTj49pNGYjxKbgMx_iDyjeErhfJFepMl306IV_TW5T_CEGE4lWFfBe9w0cwpi5KD6XlC1GO1AsrtzcYF29wJ283GNBZRkbl8iTe-LQYdjQsBtf_1fLIVt6LR7H2U1RPqa3pY16Kq6i6yC2osVg6tD7ApBCGw1WKe8uU3cm28biJzuV4gv6PzcbOdErd-hb4Cv6n2SoMPYlBfT4pWee75poQh8DYoQ1KJwowz3U1MaxOBMP260hmDK-QK0q4LYabCQiBNsz4FWWcaAAFxZFbiqGY5Gdu18uOkpMbdAN5FoZ_6nMDMSTmlf0CHv7gZe_cL38kZvTaynkWwDxqsW_Xw;AQAB".to_string()).unwrap();
+    AUDIENCE.save(s, &AUD.to_string()).unwrap();
 }
 
 fn send_token_custom_memo(
